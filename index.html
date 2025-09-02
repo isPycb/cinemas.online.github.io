@@ -5,16 +5,320 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>КиноVISION | Умный кинокритик</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Добавьте Firebase SDK -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
     <style>
-        /* ... (все предыдущие стили остаются) ... */
-        
-        /* Обновленные стили для синхронизации */
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #f97316;
+            --accent-color: #ec4899;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #475569;
+            --success-color: #22c55e;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --bg-gradient: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+        }
+
+        /* Стили для модального окна авторизации */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            backdrop-filter: blur(10px);
+        }
+
+        .auth-modal {
+            width: 90%;
+            max-width: 450px;
+            padding: 2.5rem;
+            position: relative;
+            animation: modalSlideIn 0.5s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-logo {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: var(--bg-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .auth-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .auth-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: var(--bg-secondary);
+            border-radius: 15px;
+            padding: 5px;
+            margin-bottom: 2rem;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .auth-tab.active {
+            background: var(--bg-gradient);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .auth-form {
+            display: none;
+            animation: formFadeIn 0.3s ease;
+        }
+
+        @keyframes formFadeIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 1.2rem 1.5rem;
+            border: 2px solid transparent;
+            border-radius: 15px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: var(--bg-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .auth-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 1.2rem;
+            border: none;
+            border-radius: 15px;
+            background: var(--bg-gradient);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .auth-btn:active {
+            transform: translateY(0);
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            margin: 2rem 0;
+            color: var(--text-secondary);
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .auth-divider span {
+            padding: 0 1rem;
+            font-size: 0.9rem;
+        }
+
+        .social-auth {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .social-btn {
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            background: transparent;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .social-btn:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .auth-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .auth-link:hover {
+            text-decoration: underline;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--error-color);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Стили для пользовательского меню */
+        .user-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--bg-gradient);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Стили для синхронизации */
         .sync-container {
             position: fixed;
             bottom: 20px;
@@ -23,8 +327,8 @@
         }
 
         .sync-btn {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: var(--bg-gradient);
             color: white;
@@ -33,8 +337,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 1.5rem;
             box-shadow: var(--shadow);
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         .sync-btn.syncing {
@@ -43,6 +348,7 @@
 
         .sync-btn:hover {
             transform: scale(1.1);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
         }
 
         @keyframes spin {
@@ -52,108 +358,39 @@
 
         .sync-status {
             position: absolute;
-            bottom: 60px;
+            bottom: 70px;
             right: 0;
             background: var(--bg-card);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-size: 0.8rem;
+            padding: 1rem 1.5rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: all 0.3s ease;
             pointer-events: none;
-            min-width: 200px;
+            min-width: 250px;
             text-align: center;
+            box-shadow: var(--shadow);
         }
 
         .sync-status.show {
             opacity: 1;
+            transform: translateY(-10px);
         }
 
         .sync-status.success {
-            border-left: 4px solid #4CAF50;
+            border-left: 4px solid var(--success-color);
         }
 
         .sync-status.error {
-            border-left: 4px solid #f44336;
+            border-left: 4px solid var(--error-color);
         }
 
         .sync-status.info {
-            border-left: 4px solid #2196F3;
-        }
-
-        .auth-modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--bg-card);
-            padding: 2rem;
-            border-radius: 16px;
-            z-index: 2000;
-            box-shadow: var(--shadow);
-            max-width: 400px;
-            width: 90%;
-        }
-
-        .auth-tabs {
-            display: flex;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .auth-tab {
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-        }
-
-        .auth-tab.active {
-            border-bottom-color: var(--accent-color);
-            color: var(--accent-color);
-        }
-
-        .auth-form {
-            display: none;
-        }
-
-        .auth-form.active {
-            display: block;
-        }
-
-        .auth-input {
-            width: 100%;
-            padding: 0.8rem;
-            margin: 0.5rem 0;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-        }
-
-        .user-menu {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--bg-gradient);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-weight: bold;
+            border-left: 4px solid var(--primary-color);
         }
     </style>
 </head>
 <body>
-    <!-- ... (вся предыдущая разметка) ... -->
-
     <!-- Меню пользователя -->
     <div class="user-menu">
         <div class="user-avatar" id="user-avatar" onclick="KinoVisionApp.toggleAuthModal()">
@@ -172,39 +409,70 @@
     <!-- Модальное окно авторизации -->
     <div class="modal-overlay hidden" id="auth-modal">
         <div class="auth-modal glass">
+            <button class="modal-close" onclick="KinoVisionApp.closeAuthModal()">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="fas fa-film"></i>
+                </div>
+                <h2 class="auth-title">Добро пожаловать в КиноVISION</h2>
+                <p class="auth-subtitle">Синхронизируйте ваши оценки между устройствами</p>
+            </div>
+
             <div class="auth-tabs">
                 <div class="auth-tab active" onclick="KinoVisionApp.switchAuthTab('login')">Вход</div>
                 <div class="auth-tab" onclick="KinoVisionApp.switchAuthTab('register')">Регистрация</div>
             </div>
 
             <div class="auth-form active" id="login-form">
-                <input type="email" class="auth-input" id="login-email" placeholder="Email">
-                <input type="password" class="auth-input" id="login-password" placeholder="Пароль">
-                <button onclick="KinoVisionApp.login()">Войти</button>
+                <div class="form-group">
+                    <input type="email" class="auth-input" id="login-email" placeholder="Ваш email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" class="auth-input" id="login-password" placeholder="Пароль" required>
+                </div>
+                <button class="auth-btn" onclick="KinoVisionApp.login()">
+                    <i class="fas fa-sign-in-alt"></i> Войти
+                </button>
+                
+                <div class="auth-footer">
+                    Нет аккаунта? <span class="auth-link" onclick="KinoVisionApp.switchAuthTab('register')">Зарегистрируйтесь</span>
+                </div>
             </div>
 
             <div class="auth-form" id="register-form">
-                <input type="email" class="auth-input" id="register-email" placeholder="Email">
-                <input type="password" class="auth-input" id="register-password" placeholder="Пароль">
-                <input type="password" class="auth-input" id="register-confirm" placeholder="Подтвердите пароль">
-                <button onclick="KinoVisionApp.register()">Зарегистрироваться</button>
+                <div class="form-group">
+                    <input type="email" class="auth-input" id="register-email" placeholder="Ваш email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" class="auth-input" id="register-password" placeholder="Пароль" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" class="auth-input" id="register-confirm" placeholder="Подтвердите пароль" required>
+                </div>
+                <button class="auth-btn" onclick="KinoVisionApp.register()">
+                    <i class="fas fa-user-plus"></i> Зарегистрироваться
+                </button>
+                
+                <div class="auth-footer">
+                    Уже есть аккаунт? <span class="auth-link" onclick="KinoVisionApp.switchAuthTab('login')">Войдите</span>
+                </div>
             </div>
-
-            <button class="modal-close" onclick="KinoVisionApp.closeAuthModal()">
-                <i class="fas fa-times"></i>
-            </button>
         </div>
     </div>
 
     <script>
-        // Конфигурация Firebase - замените на свою!
+        // Ваша конфигурация Firebase
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "your-project.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyD0SibAoBG-xhOGKs3r09SwtggHiT6cubg",
+            authDomain: "cinema-cb134.firebaseapp.com",
+            projectId: "cinema-cb134",
+            storageBucket: "cinema-cb134.firebasestorage.app",
+            messagingSenderId: "773088618675",
+            appId: "1:773088618675:web:9b6a405ddfa2fa4e2c68c6",
+            measurementId: "G-7G5ZQ7220S"
         };
 
         // Инициализация Firebase
@@ -213,7 +481,7 @@
         const auth = firebase.auth();
 
         const KinoVisionApp = (() => {
-            // ... (предыдущие переменные) ...
+            // ... (остальной код приложения) ...
 
             const syncElements = {
                 syncBtn: document.getElementById('sync-btn'),
@@ -226,37 +494,26 @@
             let unsubscribe = null;
 
             function init() {
-                loadFromLocalStorage();
+                // Инициализация приложения
+                setupAuthListeners();
                 setupEventListeners();
-                renderFilmList();
-                
-                // Слушаем изменения статуса аутентификации
+            }
+
+            function setupAuthListeners() {
                 auth.onAuthStateChanged((user) => {
                     currentUser = user;
                     updateUI();
                     
                     if (user) {
-                        // Загружаем данные из облака при входе
+                        showSyncStatus('Авторизация успешна!', 'success');
                         loadFromCloud();
-                        // Слушаем изменения в реальном времени
                         setupRealtimeListener();
-                    } else {
-                        // Останавливаем слушатель при выходе
-                        if (unsubscribe) unsubscribe();
                     }
                 });
             }
 
-            function setupEventListeners() {
-                // ... (предыдущие обработчики) ...
-
-                // Обработчики синхронизации
-                syncElements.syncBtn.addEventListener('click', syncWithCloud);
-            }
-
             function updateUI() {
                 if (currentUser) {
-                    // Показываем аватар пользователя
                     syncElements.userAvatar.innerHTML = currentUser.email[0].toUpperCase();
                     syncElements.userAvatar.title = currentUser.email;
                     syncElements.syncBtn.innerHTML = '<i class="fas fa-cloud"></i>';
@@ -269,78 +526,6 @@
                 }
             }
 
-            async function syncWithCloud() {
-                if (!currentUser) {
-                    showAuthModal();
-                    showSyncStatus('Требуется авторизация', 'error');
-                    return;
-                }
-
-                try {
-                    syncElements.syncBtn.classList.add('syncing');
-                    showSyncStatus('Синхронизация...', 'info');
-                    
-                    await saveToCloud();
-                    showSyncStatus('Данные синхронизированы', 'success');
-                } catch (error) {
-                    console.error('Ошибка синхронизации:', error);
-                    showSyncStatus('Ошибка синхронизации', 'error');
-                } finally {
-                    syncElements.syncBtn.classList.remove('syncing');
-                }
-            }
-
-            async function saveToCloud() {
-                if (!currentUser) return;
-
-                try {
-                    await db.collection('userData').doc(currentUser.uid).set({
-                        films: films,
-                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                } catch (error) {
-                    throw new Error('Не удалось сохранить данные в облако');
-                }
-            }
-
-            async function loadFromCloud() {
-                if (!currentUser) return;
-
-                try {
-                    const doc = await db.collection('userData').doc(currentUser.uid).get();
-                    
-                    if (doc.exists) {
-                        const cloudData = doc.data();
-                        films = cloudData.films || [];
-                        saveToLocalStorage();
-                        renderFilmList();
-                        showSyncStatus('Данные загружены из облака', 'success');
-                    }
-                } catch (error) {
-                    console.error('Ошибка загрузки из облака:', error);
-                    showSyncStatus('Ошибка загрузки данных', 'error');
-                }
-            }
-
-            function setupRealtimeListener() {
-                if (!currentUser) return;
-
-                unsubscribe = db.collection('userData').doc(currentUser.uid)
-                    .onSnapshot((doc) => {
-                        if (doc.exists) {
-                            const cloudData = doc.data();
-                            // Обновляем локальные данные только если они новее
-                            films = cloudData.films;
-                            saveToLocalStorage();
-                            renderFilmList();
-                            showSyncStatus('Данные обновлены в реальном времени', 'info');
-                        }
-                    }, (error) => {
-                        console.error('Ошибка real-time listener:', error);
-                    });
-            }
-
-            // Функции аутентификации
             async function login() {
                 const email = document.getElementById('login-email').value;
                 const password = document.getElementById('login-password').value;
@@ -348,7 +533,6 @@
                 try {
                     await auth.signInWithEmailAndPassword(email, password);
                     closeAuthModal();
-                    showSyncStatus('Вход выполнен успешно', 'success');
                 } catch (error) {
                     showSyncStatus('Ошибка входа: ' + error.message, 'error');
                 }
@@ -367,40 +551,9 @@
                 try {
                     await auth.createUserWithEmailAndPassword(email, password);
                     closeAuthModal();
-                    showSyncStatus('Регистрация успешна', 'success');
+                    showSyncStatus('Регистрация успешна!', 'success');
                 } catch (error) {
                     showSyncStatus('Ошибка регистрации: ' + error.message, 'error');
-                }
-            }
-
-            function logout() {
-                auth.signOut();
-                showSyncStatus('Выход выполнен', 'info');
-            }
-
-            function showAuthModal() {
-                syncElements.authModal.classList.remove('hidden');
-            }
-
-            function closeAuthModal() {
-                syncElements.authModal.classList.add('hidden');
-            }
-
-            function switchAuthTab(tab) {
-                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
-                
-                document.querySelector(`.auth-tab:nth-child(${tab === 'login' ? 1 : 2})`).classList.add('active');
-                document.getElementById(`${tab}-form`).classList.add('active');
-            }
-
-            function toggleAuthModal() {
-                if (currentUser) {
-                    if (confirm('Вы хотите выйти?')) {
-                        logout();
-                    }
-                } else {
-                    showAuthModal();
                 }
             }
 
@@ -413,22 +566,35 @@
                 }, 3000);
             }
 
-            // Модифицируем функцию сохранения для автоматической синхронизации
-            function saveToLocalStorage() {
-                localStorage.setItem('filmRatings', JSON.stringify(films));
+            function switchAuthTab(tab) {
+                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
                 
-                // Автоматическая синхронизация с облаком при изменении данных
+                document.querySelector(`.auth-tab:nth-child(${tab === 'login' ? 1 : 2})`).classList.add('active');
+                document.getElementById(`${tab}-form`).classList.add('active');
+            }
+
+            function showAuthModal() {
+                syncElements.authModal.classList.remove('hidden');
+            }
+
+            function closeAuthModal() {
+                syncElements.authModal.classList.add('hidden');
+            }
+
+            function toggleAuthModal() {
                 if (currentUser) {
-                    saveToCloud().catch(error => {
-                        console.error('Автосинхронизация не удалась:', error);
-                    });
+                    if (confirm('Вы хотите выйти?')) {
+                        auth.signOut();
+                        showSyncStatus('Выход выполнен', 'info');
+                    }
+                } else {
+                    showAuthModal();
                 }
             }
 
             return {
                 init,
-                deleteFilmFromModal,
-                showFilmDetails,
                 login,
                 register,
                 switchAuthTab,
@@ -438,8 +604,7 @@
             };
         })();
 
-        // Глобальные функции
-        window.KinoVisionApp = KinoVisionApp;
+        // Инициализация приложения
         document.addEventListener('DOMContentLoaded', () => KinoVisionApp.init());
     </script>
 </body>
