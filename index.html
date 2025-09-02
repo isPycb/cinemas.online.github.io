@@ -173,6 +173,7 @@
             font-weight: 600;
             font-size: 0.9rem;
             color: var(--text-secondary);
+            text-align: left;
         }
 
         .form-input {
@@ -937,7 +938,7 @@
                     <select class="genre-filter" id="genre-filter">
                         <option value="all">Все жанры</option>
                         <option value="комедия">Комедия</option>
-                        <option value="драма">Драма</option>
+                        <option value=" драма">Драма</option>
                         <option value="боевик">Боевик</option>
                         <option value="фантастика">Фантастика</option>
                         <option value="ужасы">Ужасы</option>
@@ -996,8 +997,7 @@
         };
 
         function handleImageError(img) {
-            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+0J/QvtC00YLRg9C10YIgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
-            img.onerror = null;
+            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0="
         }
 
         function debounce(func, wait) {
@@ -1074,13 +1074,13 @@
 
             function init() {
                 setupAuthEventListeners();
-                setupAppEventListeners();
                 
                 // Проверяем состояние аутентификации
                 auth.onAuthStateChanged(user => {
                     if (user) {
                         currentUser = user;
                         showAppInterface();
+                        setupAppEventListeners();
                         loadFilmsFromFirestore();
                         setupUserAvatar();
                     } else {
@@ -1104,7 +1104,6 @@
 
                 elements.loginBtn.addEventListener('click', handleLogin);
                 elements.registerBtn.addEventListener('click', handleRegister);
-                elements.logoutBtn.addEventListener('click', handleLogout);
 
                 // Ввод по Enter
                 elements.loginPassword.addEventListener('keypress', (e) => {
@@ -1119,9 +1118,19 @@
             function setupAppEventListeners() {
                 elements.themeToggle.addEventListener('click', toggleTheme);
                 elements.searchFilmBtn.addEventListener('click', handleFilmSearch);
-                elements.cancelFilmBtn.addEventListener('click', cancelFilmSelection);
-                elements.backToSearchBtn.addEventListener('click', backToSearchResults);
-                elements.modalClose.addEventListener('click', closeModal);
+                elements.logoutBtn.addEventListener('click', handleLogout);
+                
+                if (elements.cancelFilmBtn) {
+                    elements.cancelFilmBtn.addEventListener('click', cancelFilmSelection);
+                }
+                
+                if (elements.backToSearchBtn) {
+                    elements.backToSearchBtn.addEventListener('click', backToSearchResults);
+                }
+                
+                if (elements.modalClose) {
+                    elements.modalClose.addEventListener('click', closeModal);
+                }
                 
                 elements.filmInput.addEventListener('input', debounce(() => {
                     const query = elements.filmInput.value.trim();
@@ -1142,11 +1151,13 @@
                 document.addEventListener('input', handleDynamicInput);
 
                 // Закрытие модального окна по клику вне его
-                elements.filmModal.addEventListener('click', (e) => {
-                    if (e.target === elements.filmModal) {
-                        closeModal();
-                    }
-                });
+                if (elements.filmModal) {
+                    elements.filmModal.addEventListener('click', (e) => {
+                        if (e.target === elements.filmModal) {
+                            closeModal();
+                        }
+                    });
+                }
             }
 
             function setAuthButtonLoading(button, isLoading) {
