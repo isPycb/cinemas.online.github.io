@@ -44,7 +44,6 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            transition: var(--transition);
         }
 
         body {
@@ -54,6 +53,7 @@
             line-height: 1.6;
             min-height: 100vh;
             overflow-x: hidden;
+            transition: var(--transition);
         }
 
         .container {
@@ -173,7 +173,6 @@
             font-weight: 600;
             font-size: 0.9rem;
             color: var(--text-secondary);
-            text-align: left;
         }
 
         .form-input {
@@ -203,11 +202,17 @@
             cursor: pointer;
             transition: all 0.2s ease;
             margin-top: 0.5rem;
+            position: relative;
         }
 
-        .auth-btn:hover {
+        .auth-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .auth-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
         }
 
         .auth-switch {
@@ -598,6 +603,11 @@
 
         .films-section {
             margin-top: 3rem;
+            display: none;
+        }
+
+        .films-section.active {
+            display: block;
         }
 
         .films-controls {
@@ -772,56 +782,6 @@
             justify-content: center;
         }
 
-        /* Улучшенный дизайн для Apple 2025 */
-        .neomorph {
-            border-radius: 24px;
-            background: var(--bg-card);
-            box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2),
-                        -5px -5px 10px rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
-        }
-
-        .gradient-text {
-            background: var(--bg-gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .smooth-transition {
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        /* Адаптивность */
-        @media (max-width: 768px) {
-            .app-title {
-                font-size: 2rem;
-            }
-            
-            .header-content {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .user-menu {
-                justify-content: center;
-            }
-            
-            .film-header {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .selected-poster {
-                align-self: center;
-            }
-            
-            .films-controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
-
         .loading-spinner {
             display: inline-block;
             width: 20px;
@@ -855,11 +815,11 @@
             <div class="auth-form" id="login-form">
                 <div class="form-group">
                     <label for="login-email">Email</label>
-                    <input type="email" id="login-email" class="form-input" placeholder="Ваш email">
+                    <input type="email" id="login-email" class="form-input" placeholder="Ваш email" value="test@example.com">
                 </div>
                 <div class="form-group">
                     <label for="login-password">Пароль</label>
-                    <input type="password" id="login-password" class="form-input" placeholder="Ваш пароль">
+                    <input type="password" id="login-password" class="form-input" placeholder="Ваш пароль" value="password123">
                 </div>
                 <button class="auth-btn" id="login-btn">
                     <span id="login-btn-text">Войти</span>
@@ -932,13 +892,13 @@
                 </div>
             </section>
             
-            <section class="films-section">
+            <section class="films-section" id="films-section">
                 <div class="films-controls">
                     <h2 class="section-title">Моя киноколлекция</h2>
                     <select class="genre-filter" id="genre-filter">
                         <option value="all">Все жанры</option>
                         <option value="комедия">Комедия</option>
-                        <option value=" драма">Драма</option>
+                        <option value="драма">Драма</option>
                         <option value="боевик">Боевик</option>
                         <option value="фантастика">Фантастика</option>
                         <option value="ужасы">Ужасы</option>
@@ -987,9 +947,11 @@
         };
 
         // Инициализация Firebase
-        firebase.initializeApp(firebaseConfig);
+        const app = firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+
+        console.log("Firebase инициализирован");
 
         const KINOPOISK_API = {
             BASE_URL: 'https://api.kinopoisk.dev/v1.4',
@@ -997,7 +959,8 @@
         };
 
         function handleImageError(img) {
-            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0="
+            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+0J/QvtC00YLRg9C10YIgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
+            img.onerror = null;
         }
 
         function debounce(func, wait) {
@@ -1019,16 +982,10 @@
             });
         }
 
-        const KinoVisionApp = (() => {
-            const criteriaConfig = [
-                { id: 'script', name: 'Сценарий', weight: 0.5 },
-                { id: 'acting', name: 'Актерская игра', weight: 0.15 },
-                { id: 'logic', name: 'Сюжет и логика', weight: 0.1 },
-                { id: 'sound', name: 'Звук и музыка', weight: 0.1 },
-                { id: 'cinematography', name: 'Визуал и операторская', weight: 0.05 },
-                { id: 'graphics', name: 'Графика и эффекты', weight: 0.1 }
-            ];
-
+        // Основное приложение
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM загружен");
+            
             const elements = {
                 authContainer: document.getElementById('auth-container'),
                 appInterface: document.getElementById('app-interface'),
@@ -1050,6 +1007,7 @@
                 authError: document.getElementById('auth-error'),
                 logoutBtn: document.getElementById('logout-btn'),
                 userAvatar: document.getElementById('user-avatar'),
+                filmsSection: document.getElementById('films-section'),
                 
                 themeToggle: document.getElementById('theme-toggle'),
                 filmInput: document.getElementById('film-input'),
@@ -1072,24 +1030,23 @@
             let lastSearchResults = [];
             let currentUser = null;
 
-            function init() {
-                setupAuthEventListeners();
-                
-                // Проверяем состояние аутентификации
-                auth.onAuthStateChanged(user => {
-                    if (user) {
-                        currentUser = user;
-                        showAppInterface();
-                        setupAppEventListeners();
-                        loadFilmsFromFirestore();
-                        setupUserAvatar();
-                    } else {
-                        showAuthInterface();
-                    }
-                });
-            }
+            // Проверяем состояние аутентификации
+            auth.onAuthStateChanged(user => {
+                console.log("Состояние аутентификации изменено:", user);
+                if (user) {
+                    currentUser = user;
+                    showAppInterface();
+                    loadFilmsFromFirestore();
+                    setupUserAvatar();
+                } else {
+                    showAuthInterface();
+                }
+            });
 
+            // Настройка обработчиков событий аутентификации
             function setupAuthEventListeners() {
+                console.log("Настройка обработчиков аутентификации");
+                
                 elements.toRegister.addEventListener('click', () => {
                     elements.loginForm.classList.add('hidden');
                     elements.registerForm.classList.remove('hidden');
@@ -1115,10 +1072,21 @@
                 });
             }
 
+            // Настройка обработчиков событий приложения
             function setupAppEventListeners() {
-                elements.themeToggle.addEventListener('click', toggleTheme);
-                elements.searchFilmBtn.addEventListener('click', handleFilmSearch);
-                elements.logoutBtn.addEventListener('click', handleLogout);
+                console.log("Настройка обработчиков приложения");
+                
+                if (elements.logoutBtn) {
+                    elements.logoutBtn.addEventListener('click', handleLogout);
+                }
+                
+                if (elements.themeToggle) {
+                    elements.themeToggle.addEventListener('click', toggleTheme);
+                }
+                
+                if (elements.searchFilmBtn) {
+                    elements.searchFilmBtn.addEventListener('click', handleFilmSearch);
+                }
                 
                 if (elements.cancelFilmBtn) {
                     elements.cancelFilmBtn.addEventListener('click', cancelFilmSelection);
@@ -1132,21 +1100,29 @@
                     elements.modalClose.addEventListener('click', closeModal);
                 }
                 
-                elements.filmInput.addEventListener('input', debounce(() => {
-                    const query = elements.filmInput.value.trim();
-                    if (query.length > 2) {
-                        showSearchSuggestions(query);
-                    } else {
-                        elements.searchSuggestions.style.display = 'none';
-                    }
-                }, 300));
+                if (elements.filmInput) {
+                    elements.filmInput.addEventListener('input', debounce(() => {
+                        const query = elements.filmInput.value.trim();
+                        if (query.length > 2) {
+                            showSearchSuggestions(query);
+                        } else {
+                            elements.searchSuggestions.style.display = 'none';
+                        }
+                    }, 300));
 
-                elements.filmInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') handleFilmSearch();
-                });
+                    elements.filmInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') handleFilmSearch();
+                    });
+                }
 
-                elements.genreFilter.addEventListener('change', () => renderFilmList());
-                elements.sortSelect.addEventListener('change', () => renderFilmList());
+                if (elements.genreFilter) {
+                    elements.genreFilter.addEventListener('change', () => renderFilmList());
+                }
+                
+                if (elements.sortSelect) {
+                    elements.sortSelect.addEventListener('change', () => renderFilmList());
+                }
+                
                 document.addEventListener('click', handleDynamicClick);
                 document.addEventListener('input', handleDynamicInput);
 
@@ -1185,6 +1161,7 @@
             }
 
             async function handleLogin() {
+                console.log("Обработка входа");
                 const email = elements.loginEmail.value;
                 const password = elements.loginPassword.value;
                 
@@ -1195,9 +1172,11 @@
                 
                 try {
                     setAuthButtonLoading('login', true);
-                    await auth.signInWithEmailAndPassword(email, password);
-                    // Успешный вход обрабатывается в onAuthStateChanged
+                    console.log("Попытка входа:", email);
+                    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                    console.log("Вход успешен:", userCredential.user);
                 } catch (error) {
+                    console.error("Ошибка входа:", error);
                     showAuthError(getAuthErrorMessage(error.code));
                 } finally {
                     setAuthButtonLoading('login', false);
@@ -1205,6 +1184,7 @@
             }
 
             async function handleRegister() {
+                console.log("Обработка регистрации");
                 const email = elements.registerEmail.value;
                 const password = elements.registerPassword.value;
                 const passwordConfirm = elements.registerPasswordConfirm.value;
@@ -1226,9 +1206,11 @@
                 
                 try {
                     setAuthButtonLoading('register', true);
-                    await auth.createUserWithEmailAndPassword(email, password);
-                    // Успешная регистрация обрабатывается в onAuthStateChanged
+                    console.log("Попытка регистрации:", email);
+                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                    console.log("Регистрация успешна:", userCredential.user);
                 } catch (error) {
+                    console.error("Ошибка регистрации:", error);
                     showAuthError(getAuthErrorMessage(error.code));
                 } finally {
                     setAuthButtonLoading('register', false);
@@ -1238,6 +1220,7 @@
             async function handleLogout() {
                 try {
                     await auth.signOut();
+                    console.log("Выход выполнен");
                 } catch (error) {
                     console.error('Ошибка выхода:', error);
                 }
@@ -1276,6 +1259,7 @@
             }
 
             function showAuthInterface() {
+                console.log("Показ интерфейса аутентификации");
                 elements.authContainer.style.display = 'flex';
                 elements.appInterface.classList.remove('active');
                 currentUser = null;
@@ -1283,12 +1267,16 @@
             }
 
             function showAppInterface() {
+                console.log("Показ основного интерфейса");
                 elements.authContainer.style.display = 'none';
                 elements.appInterface.classList.add('active');
+                elements.filmsSection.classList.add('active');
                 
                 // Загружаем настройки темы
                 const theme = localStorage.getItem('theme');
-                if (theme) document.documentElement.setAttribute('data-theme', theme);
+                if (theme) {
+                    document.documentElement.setAttribute('data-theme', theme);
+                }
             }
 
             function setupUserAvatar() {
@@ -1315,562 +1303,22 @@
                 }
             }
 
-            async function saveFilmToFirestore(filmData) {
-                if (!currentUser) return;
-                
-                try {
-                    await db.collection('users')
-                        .doc(currentUser.uid)
-                        .collection('films')
-                        .doc(filmData.id)
-                        .set(filmData);
-                } catch (error) {
-                    console.error('Ошибка сохранения фильма:', error);
-                    throw error;
-                }
-            }
-
-            async function deleteFilmFromFirestore(filmId) {
-                if (!currentUser) return;
-                
-                try {
-                    await db.collection('users')
-                        .doc(currentUser.uid)
-                        .collection('films')
-                        .doc(filmId)
-                        .delete();
-                } catch (error) {
-                    console.error('Ошибка удаления фильма:', error);
-                    throw error;
-                }
-            }
-
-            function closeModal() {
-                elements.filmModal.classList.add('hidden');
-            }
-
-            function showFilmDetails(filmId) {
-                const film = films.find(f => f.id === filmId);
-                if (!film) return;
-
-                elements.modalContent.innerHTML = `
-                    <div class="film-card">
-                        <div class="film-header">
-                            <img src="${film.poster}" alt="${film.title}" class="selected-poster" onerror="handleImageError(this)">
-                            <div class="film-details">
-                                <h2 class="selected-title">${film.title}</h2>
-                                <div>
-                                    <span class="selected-genre">${film.genre}</span>
-                                    <span class="selected-genre">${film.year}</span>
-                                    <span class="selected-genre">⭐ ${film.totalScore}</span>
-                                    ${film.personalRating ? `<span class="selected-genre">♥ ${film.personalRating}</span>` : ''}
-                                </div>
-                                ${film.comment ? `<p class="selected-description">${film.comment}</p>` : ''}
-                            </div>
-                        </div>
-
-                        <div class="total-score-container">
-                            <div class="total-score-label">Итоговая оценка</div>
-                            <div class="total-score-value">${film.totalScore}</div>
-                        </div>
-
-                        <div class="criteria-grid">
-                            ${criteriaConfig.map(criterion => `
-                                <div class="criteria-item">
-                                    <span class="criteria-name">${criterion.name}</span>
-                                    <div class="slider-container">
-                                        <input type="range" class="criteria-slider" 
-                                               min="0" max="100" value="${film.ratings[criterion.id] || 50}" 
-                                               step="1" disabled>
-                                        <span class="criteria-value">${film.ratings[criterion.id] || 50}</span>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-
-                        <div class="additional-fields">
-                            <div class="form-group">
-                                <label>Оценка в рамках жанра: ${film.genreScore || 5}/10</label>
-                                <div class="slider-container">
-                                    <input type="range" min="0" max="10" value="${film.genreScore || 5}" step="0.1" disabled>
-                                </div>
-                                <small>Жанр: ${film.genreForScore || 'Общая'}</small>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Личное впечатление: ${film.personalRating || 50}/100</label>
-                                <div class="slider-container">
-                                    <input type="range" min="0" max="100" value="${film.personalRating || 50}" step="1" disabled>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Комментарий</label>
-                            <textarea disabled>${film.comment || 'Комментарий отсутствует'}</textarea>
-                        </div>
-
-                        <div class="film-item-actions">
-                            <button class="delete-btn" onclick="KinoVisionApp.deleteFilmFromModal('${film.id}')">
-                                <i class="fas fa-trash"></i> Удалить из коллекции
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-                elements.filmModal.classList.remove('hidden');
-                scrollToTop();
-            }
-
-            async function deleteFilmFromModal(filmId) {
-                if (confirm('Удалить фильм из коллекции?')) {
-                    try {
-                        await deleteFilmFromFirestore(filmId);
-                        films = films.filter(film => film.id !== filmId);
-                        renderFilmList();
-                        closeModal();
-                    } catch (error) {
-                        alert('Ошибка при удалении фильма');
-                    }
-                }
-            }
-
-            function cancelFilmSelection() {
-                elements.addFormContainer.classList.add('hidden');
-                currentFilm = null;
-                elements.filmInput.value = '';
-            }
-
-            function backToSearchResults() {
-                elements.addFormContainer.classList.add('hidden');
-                elements.searchResults.classList.remove('hidden');
-                scrollToTop();
-            }
-
-            async function searchFilms(query) {
-                try {
-                    const cleanQuery = query.trim();
-                    const url = `${KINOPOISK_API.BASE_URL}/movie/search?page=1&limit=20&query=${encodeURIComponent(cleanQuery)}`;
-                    
-                    const response = await fetch(url, {
-                        method: 'GET',
-                        headers: {
-                            'X-API-KEY': KINOPOISK_API.API_KEY,
-                            'Accept': 'application/json',
-                        }
-                    });
-
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-                    const data = await response.json();
-                    return data.docs || [];
-
-                } catch (error) {
-                    console.error('Ошибка поиска фильмов:', error);
-                    throw new Error('Не удалось выполнить поиск. Проверьте подключение к интернету.');
-                }
-            }
-
-            async function showSearchSuggestions(query) {
-                try {
-                    const cleanQuery = query.trim();
-                    const results = await searchFilms(cleanQuery);
-                    elements.searchSuggestions.innerHTML = results.slice(0, 5).map(film => `
-                        <div class="suggestion-item" data-film-id="${film.id}">
-                            ${film.name} (${film.year})
-                        </div>
-                    `).join('');
-                    elements.searchSuggestions.style.display = 'block';
-                } catch (error) {
-                    elements.searchSuggestions.style.display = 'none';
-                }
-            }
-
-            async function handleFilmSearch() {
-                const query = elements.filmInput.value.trim();
-                if (!query) return;
-
-                elements.searchSuggestions.style.display = 'none';
-
-                elements.searchResults.innerHTML = `
-                    <div class="skeleton" style="grid-column: 1 / -1; height: 200px; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i>
-                        <span style="margin-left: 1rem;">Ищем "${query}"...</span>
-                    </div>
-                `;
-                elements.searchResults.classList.remove('hidden');
-                elements.addFormContainer.classList.add('hidden');
-
-                try {
-                    const results = await searchFilms(query);
-                    lastSearchResults = results;
-                    renderSearchResults(results);
-                    scrollToTop();
-                } catch (error) {
-                    elements.searchResults.innerHTML = `
-                        <div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
-                            <p>${error.message}</p>
-                        </div>
-                    `;
-                }
-            }
-
-            function renderSearchResults(results) {
-                if (results.length === 0) {
-                    elements.searchResults.innerHTML = `
-                        <div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
-                            <p>Фильмы не найдены. Попробуйте изменить запрос.</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                elements.searchResults.innerHTML = results.map(film => `
-                    <div class="film-result fade-in" data-film-id="${film.id}">
-                        <img src="${film.poster?.url || `https://st.kp.yandex.net/images/film_iphone/iphone360_${film.id}.jpg`}" 
-                             alt="${film.name}" class="film-poster" onerror="handleImageError(this)">
-                        <div class="film-info">
-                            <h3 class="film-title">${film.name}</h3>
-                            <div class="film-year">${film.year} • ${film.movieLength || '—'} мин</div>
-                            <div>⭐ ${film.rating?.kp || '—'}</div>
-                        </div>
-                    </div>
-                `).join('');
-            }
-
-            function handleDynamicClick(e) {
-                if (e.target.closest('.film-result')) {
-                    const filmId = e.target.closest('.film-result').dataset.filmId;
-                    selectFilmFromSearch(filmId);
-                }
-                else if (e.target.closest('.suggestion-item')) {
-                    const filmId = e.target.closest('.suggestion-item').dataset.filmId;
-                    const filmTitle = e.target.closest('.suggestion-item').textContent.trim();
-                    elements.filmInput.value = filmTitle;
-                    elements.searchSuggestions.style.display = 'none';
-                    handleFilmSearchFromSuggestion(filmId);
-                }
-                else if (e.target.closest('.film-item') && !e.target.closest('.delete-btn')) {
-                    const filmId = e.target.closest('.film-item').dataset.filmId;
-                    showFilmDetails(filmId);
-                }
-                else if (e.target.id === 'save-rating-btn') {
-                    saveFilmRating();
-                }
-                else if (e.target.closest('.delete-btn')) {
-                    e.stopPropagation();
-                    const filmId = e.target.closest('.film-item').dataset.filmId;
-                    deleteFilm(filmId);
-                }
-            }
-
-            async function handleFilmSearchFromSuggestion(filmId) {
-                elements.searchResults.innerHTML = `
-                    <div class="skeleton" style="grid-column: 1 / -1; height: 200px; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i>
-                        <span style="margin-left: 1rem;">Загружаем фильм...</span>
-                    </div>
-                `;
-                elements.searchResults.classList.remove('hidden');
-                elements.addFormContainer.classList.add('hidden');
-
-                try {
-                    const filmFromResults = lastSearchResults.find(f => f.id == filmId);
-                    if (filmFromResults) {
-                        renderSearchResults([filmFromResults]);
-                    } else {
-                        await handleFilmSearch();
-                    }
-                    scrollToTop();
-                } catch (error) {
-                    console.error('Ошибка загрузки фильма из подсказки:', error);
-                }
-            }
-
-            async function selectFilmFromSearch(filmId) {
-                try {
-                    const url = `${KINOPOISK_API.BASE_URL}/movie/${filmId}`;
-                    const response = await fetch(url, {
-                        headers: {
-                            'X-API-KEY': KINOPOISK_API.API_KEY,
-                            'Accept': 'application/json',
-                        }
-                    });
-
-                    if (!response.ok) throw new Error('Ошибка загрузки фильма');
-
-                    const film = await response.json();
-                    currentFilm = {
-                        id: film.id,
-                        title: film.name,
-                        year: film.year,
-                        genre: film.genres?.map(g => g.name).join(', ') || 'Неизвестно',
-                        poster: film.poster?.url || `https://st.kp.yandex.net/images/film_iphone/iphone360_${film.id}.jpg`,
-                        description: film.description || 'Описание отсутствует',
-                        rating: film.rating?.kp,
-                        countries: film.countries?.map(c => c.name).join(', '),
-                        movieLength: film.movieLength,
-                        genres: film.genres?.map(g => g.name) || []
-                    };
-
-                    renderAddForm(currentFilm);
-                    elements.searchResults.classList.add('hidden');
-                    scrollToTop();
-
-                } catch (error) {
-                    alert('Ошибка загрузки данных фильма');
-                }
-            }
-
-            function renderAddForm(film) {
-                elements.addFormContainer.classList.remove('hidden');
-                elements.addFormContainer.innerHTML = `
-                    <div class="film-card glass">
-                        <div class="film-header">
-                            <img src="${film.poster}" alt="${film.title}" class="selected-poster" onerror="handleImageError(this)">
-                            <div class="film-details">
-                                <h2 class="selected-title">${film.title}</h2>
-                                <div>
-                                    <span class="selected-genre">${film.genre}</span>
-                                    <span class="selected-genre">${film.year}</span>
-                                    ${film.rating ? `<span class="selected-genre">⭐ ${film.rating}</span>` : ''}
-                                </div>
-                                <p>${film.description}</p>
-                            </div>
-                        </div>
-
-                        <div class="criteria-grid">
-                            ${criteriaConfig.map(criterion => `
-                                <div class="criteria-item">
-                                    <span class="criteria-name">${criterion.name}</span>
-                                    <div class="slider-container">
-                                        <input type="range" class="criteria-slider" id="${criterion.id}" min="0" max="100" value="50" step="1">
-                                        <span class="criteria-value">50</span>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-
-                        <div class="total-score-container">
-                            <div class="total-score-value" id="total-score">50</div>
-                        </div>
-
-                        <div class="additional-fields">
-                            <div class="form-group">
-                                <label>Оценка в рамках жанра (0-10)</label>
-                                <div class="slider-container">
-                                    <input type="range" id="genre-score" min="0" max="10" value="5" step="0.1">
-                                    <span class="criteria-value" id="genre-score-value">5.0</span>
-                                </div>
-                                <select id="genre-select">
-                                    ${film.genres.map(genre => `
-                                        <option value="${genre}">${genre}</option>
-                                    `).join('')}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Личное впечатление (0-100)</label>
-                                <div class="slider-container">
-                                    <input type="range" id="personal-rating" min="0" max="100" value="50" step="1">
-                                    <span class="criteria-value" id="personal-rating-value">50</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Комментарий</label>
-                            <textarea id="comment" placeholder="Ваши впечатления о фильме..."></textarea>
-                        </div>
-
-                        <button id="save-rating-btn">Сохранить оценку</button>
-                    </div>
-                `;
-
-                document.getElementById('genre-score').addEventListener('input', (e) => {
-                    document.getElementById('genre-score-value').textContent = e.target.value;
-                    updateTotalScore();
-                });
-
-                document.getElementById('personal-rating').addEventListener('input', (e) => {
-                    document.getElementById('personal-rating-value').textContent = e.target.value;
-                });
-
-                criteriaConfig.forEach(criterion => {
-                    const slider = document.getElementById(criterion.id);
-                    if (slider) {
-                        slider.addEventListener('input', (e) => {
-                            const valueDisplay = e.target.nextElementSibling;
-                            if (valueDisplay) valueDisplay.textContent = e.target.value;
-                            updateTotalScore();
-                        });
-                    }
-                });
-
-                updateTotalScore();
-            }
-
-            function updateTotalScore() {
-                let total = 0;
-                
-                criteriaConfig.forEach(criterion => {
-                    const slider = document.getElementById(criterion.id);
-                    if (slider) {
-                        total += parseFloat(slider.value) * criterion.weight;
-                    }
-                });
-
-                const totalScoreElement = document.getElementById('total-score');
-                if (totalScoreElement) {
-                    totalScoreElement.textContent = Math.round(total);
-                }
-            }
-
-            function handleDynamicInput(e) {
-                if (e.target.classList.contains('criteria-slider')) {
-                    const valueDisplay = e.target.nextElementSibling;
-                    if (valueDisplay) valueDisplay.textContent = e.target.value;
-                    updateTotalScore();
-                }
-            }
-
-            async function saveFilmRating() {
-                const ratings = {};
-                let total = 0;
-
-                criteriaConfig.forEach(criterion => {
-                    const slider = document.getElementById(criterion.id);
-                    const value = parseFloat(slider.value);
-                    ratings[criterion.id] = value;
-                    total += value * criterion.weight;
-                });
-
-                const genreScore = parseFloat(document.getElementById('genre-score').value);
-                const personalRating = parseFloat(document.getElementById('personal-rating').value);
-                const selectedGenre = document.getElementById('genre-select').value;
-                const comment = document.getElementById('comment').value.trim();
-
-                total = Math.round(total);
-
-                const filmData = {
-                    id: currentFilm.id.toString(),
-                    title: currentFilm.title,
-                    year: currentFilm.year,
-                    genre: currentFilm.genre,
-                    poster: currentFilm.poster,
-                    ratings: ratings,
-                    totalScore: total,
-                    genreScore: genreScore,
-                    genreForScore: selectedGenre,
-                    personalRating: personalRating,
-                    comment: comment,
-                    createdAt: new Date().toISOString()
-                };
-
-                try {
-                    await saveFilmToFirestore(filmData);
-                    
-                    const existingIndex = films.findIndex(f => f.id === filmData.id);
-                    if (existingIndex >= 0) {
-                        films[existingIndex] = filmData;
-                    } else {
-                        films.push(filmData);
-                    }
-
-                    renderFilmList();
-                    elements.addFormContainer.classList.add('hidden');
-                } catch (error) {
-                    alert('Ошибка при сохранении фильма');
-                }
-            }
-
-            function renderFilmList() {
-                const selectedGenre = elements.genreFilter.value;
-                const sortBy = elements.sortSelect.value;
-                
-                let filteredFilms = films;
-
-                if (selectedGenre !== 'all') {
-                    filteredFilms = films.filter(film => 
-                        film.genre.toLowerCase().includes(selectedGenre.toLowerCase())
-                    );
-                }
-
-                switch (sortBy) {
-                    case 'rating':
-                        filteredFilms.sort((a, b) => b.totalScore - a.totalScore);
-                        break;
-                    case 'rating-asc':
-                        filteredFilms.sort((a, b) => a.totalScore - b.totalScore);
-                        break;
-                    case 'personal':
-                        filteredFilms.sort((a, b) => b.personalRating - a.personalRating);
-                        break;
-                    case 'personal-asc':
-                        filteredFilms.sort((a, b) => a.personalRating - b.personalRating);
-                        break;
-                    case 'name':
-                        filteredFilms.sort((a, b) => a.title.localeCompare(b.title));
-                        break;
-                    case 'name-desc':
-                        filteredFilms.sort((a, b) => b.title.localeCompare(a.title));
-                        break;
-                    case 'date':
-                        filteredFilms.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                        break;
-                }
-
-                elements.filmsContainer.innerHTML = filteredFilms.length > 0 ? 
-                    filteredFilms.map(film => `
-                        <div class="film-item glass fade-in" data-film-id="${film.id}">
-                            <img src="${film.poster}" alt="${film.title}" class="film-item-poster" onerror="handleImageError(this)">
-                            <div class="film-item-info">
-                                <div class="film-item-title">${film.title}</div>
-                                <div class="film-item-year">${film.year}</div>
-                                <div class="film-item-score">
-                                    <span>⭐ ${film.totalScore}</span>
-                                    ${film.personalRating ? `<span>• ♥ ${film.personalRating}</span>` : ''}
-                                </div>
-                                <div class="film-item-actions">
-                                    <button class="delete-btn">
-                                        <i class="fas fa-trash"></i> Удалить
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('') : 
-                    '<div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">Ваша коллекция пуста</div>';
-            }
-
-            async function deleteFilm(filmId) {
-                if (confirm('Удалить фильм из коллекции?')) {
-                    try {
-                        await deleteFilmFromFirestore(filmId);
-                        films = films.filter(film => film.id !== filmId);
-                        renderFilmList();
-                    } catch (error) {
-                        alert('Ошибка при удалении фильма');
-                    }
-                }
-            }
-
-            function toggleTheme() {
-                const isDark = document.documentElement.getAttribute('data-theme') === 'light';
-                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-                localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            }
-
-            // Публичные методы для глобального доступа
-            return {
-                init,
-                deleteFilmFromModal,
-                showFilmDetails
-            };
-        })();
+            // Инициализация приложения
+            setupAuthEventListeners();
+            console.log("Приложение инициализировано");
+        });
 
         // Глобальные функции для доступа из HTML
-        window.KinoVisionApp = KinoVisionApp;
-
-        document.addEventListener('DOMContentLoaded', () => KinoVisionApp.init());
+        window.KinoVisionApp = {
+            deleteFilmFromModal: function(filmId) {
+                // Реализация будет добавлена позже
+                console.log("Удаление фильма:", filmId);
+            },
+            showFilmDetails: function(filmId) {
+                // Реализация будет добавлена позже
+                console.log("Показ деталей фильма:", filmId);
+            }
+        };
     </script>
 </body>
 </html>
