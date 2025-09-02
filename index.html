@@ -820,6 +820,20 @@
                 align-items: stretch;
             }
         }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -846,7 +860,10 @@
                     <label for="login-password">Пароль</label>
                     <input type="password" id="login-password" class="form-input" placeholder="Ваш пароль">
                 </div>
-                <button class="auth-btn" id="login-btn">Войти</button>
+                <button class="auth-btn" id="login-btn">
+                    <span id="login-btn-text">Войти</span>
+                    <span id="login-btn-spinner" class="hidden"><div class="loading-spinner"></div></span>
+                </button>
                 
                 <div class="auth-switch">
                     Нет аккаунта? <span class="auth-link" id="to-register">Зарегистрироваться</span>
@@ -866,7 +883,10 @@
                     <label for="register-password-confirm">Подтверждение пароля</label>
                     <input type="password" id="register-password-confirm" class="form-input" placeholder="Повторите пароль">
                 </div>
-                <button class="auth-btn" id="register-btn">Зарегистрироваться</button>
+                <button class="auth-btn" id="register-btn">
+                    <span id="register-btn-text">Зарегистрироваться</span>
+                    <span id="register-btn-spinner" class="hidden"><div class="loading-spinner"></div></span>
+                </button>
                 
                 <div class="auth-switch">
                     Уже есть аккаунт? <span class="auth-link" id="to-login">Войти</span>
@@ -1022,7 +1042,11 @@
                 registerPassword: document.getElementById('register-password'),
                 registerPasswordConfirm: document.getElementById('register-password-confirm'),
                 loginBtn: document.getElementById('login-btn'),
+                loginBtnText: document.getElementById('login-btn-text'),
+                loginBtnSpinner: document.getElementById('login-btn-spinner'),
                 registerBtn: document.getElementById('register-btn'),
+                registerBtnText: document.getElementById('register-btn-text'),
+                registerBtnSpinner: document.getElementById('register-btn-spinner'),
                 authError: document.getElementById('auth-error'),
                 logoutBtn: document.getElementById('logout-btn'),
                 userAvatar: document.getElementById('user-avatar'),
@@ -1069,11 +1093,13 @@
                 elements.toRegister.addEventListener('click', () => {
                     elements.loginForm.classList.add('hidden');
                     elements.registerForm.classList.remove('hidden');
+                    clearAuthError();
                 });
 
                 elements.toLogin.addEventListener('click', () => {
                     elements.registerForm.classList.add('hidden');
                     elements.loginForm.classList.remove('hidden');
+                    clearAuthError();
                 });
 
                 elements.loginBtn.addEventListener('click', handleLogin);
@@ -1123,6 +1149,30 @@
                 });
             }
 
+            function setAuthButtonLoading(button, isLoading) {
+                if (button === 'login') {
+                    if (isLoading) {
+                        elements.loginBtnText.classList.add('hidden');
+                        elements.loginBtnSpinner.classList.remove('hidden');
+                        elements.loginBtn.disabled = true;
+                    } else {
+                        elements.loginBtnText.classList.remove('hidden');
+                        elements.loginBtnSpinner.classList.add('hidden');
+                        elements.loginBtn.disabled = false;
+                    }
+                } else if (button === 'register') {
+                    if (isLoading) {
+                        elements.registerBtnText.classList.add('hidden');
+                        elements.registerBtnSpinner.classList.remove('hidden');
+                        elements.registerBtn.disabled = true;
+                    } else {
+                        elements.registerBtnText.classList.remove('hidden');
+                        elements.registerBtnSpinner.classList.add('hidden');
+                        elements.registerBtn.disabled = false;
+                    }
+                }
+            }
+
             async function handleLogin() {
                 const email = elements.loginEmail.value;
                 const password = elements.loginPassword.value;
@@ -1133,10 +1183,13 @@
                 }
                 
                 try {
+                    setAuthButtonLoading('login', true);
                     await auth.signInWithEmailAndPassword(email, password);
                     // Успешный вход обрабатывается в onAuthStateChanged
                 } catch (error) {
                     showAuthError(getAuthErrorMessage(error.code));
+                } finally {
+                    setAuthButtonLoading('login', false);
                 }
             }
 
@@ -1161,10 +1214,13 @@
                 }
                 
                 try {
+                    setAuthButtonLoading('register', true);
                     await auth.createUserWithEmailAndPassword(email, password);
                     // Успешная регистрация обрабатывается в onAuthStateChanged
                 } catch (error) {
                     showAuthError(getAuthErrorMessage(error.code));
+                } finally {
+                    setAuthButtonLoading('register', false);
                 }
             }
 
@@ -1190,6 +1246,10 @@
                         return 'Email уже используется';
                     case 'auth/weak-password':
                         return 'Пароль слишком простой';
+                    case 'auth/operation-not-allowed':
+                        return 'Операция не разрешена';
+                    case 'auth/network-request-failed':
+                        return 'Ошибка сети. Проверьте подключение к интернету';
                     default:
                         return 'Произошла ошибка. Попробуйте снова';
                 }
@@ -1198,10 +1258,10 @@
             function showAuthError(message) {
                 elements.authError.textContent = message;
                 elements.authError.style.display = 'block';
-                
-                setTimeout(() => {
-                    elements.authError.style.display = 'none';
-                }, 5000);
+            }
+
+            function clearAuthError() {
+                elements.authError.style.display = 'none';
             }
 
             function showAuthInterface() {
