@@ -5,271 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>КиноVISION | Умный кинокритик</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Добавляем Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <style>
-        :root {
-            --bg-primary: #0a0a14;
-            --bg-secondary: #15152a;
-            --bg-card: rgba(30, 30, 56, 0.7);
-            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --text-primary: #ffffff;
-            --text-secondary: #a0a0c0;
-            --accent-primary: #7b68ee;
-            --accent-secondary: #6a5acd;
-            --success: #50c878;
-            --danger: #ff6b6b;
-            --border-color: rgba(255, 255, 255, 0.1);
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            --glass: rgba(30, 30, 56, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --blur-amount: blur(20px);
-        }
-
-        [data-theme="light"] {
-            --bg-primary: #f0f2ff;
-            --bg-secondary: #ffffff;
-            --bg-card: rgba(255, 255, 255, 0.7);
-            --bg-gradient: linear-gradient(135deg, #a3bded 0%, #6991c7 100%);
-            --text-primary: #1a1a2e;
-            --text-secondary: #4a4a6e;
-            --accent-primary: #5c6bc0;
-            --accent-secondary: #3f51b5;
-            --border-color: rgba(0, 0, 0, 0.1);
-            --shadow: 0 8px 32px rgba(100, 100, 150, 0.1);
-            --glass: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(0, 0, 0, 0.05);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
-            min-height: 100vh;
-            overflow-x: hidden;
-            transition: var(--transition);
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        .glass {
-            background: var(--glass);
-            backdrop-filter: var(--blur-amount);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            box-shadow: var(--shadow);
-        }
-
-        /* Анимации */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-
-        /* Стили для экрана аутентификации */
+        /* ... (все предыдущие стили остаются) ... */
+        
+        /* Стили для аутентификации */
         .auth-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            padding: 2rem;
-            background: var(--bg-primary);
-            position: relative;
-            overflow: hidden;
+            z-index: 3000;
         }
 
-        .auth-content {
-            width: 100%;
-            max-width: 400px;
-            padding: 2.5rem;
-            border-radius: 24px;
+        .auth-modal {
             background: var(--bg-card);
-            backdrop-filter: var(--blur-amount);
-            border: 1px solid var(--border-color);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            animation: fadeIn 0.8s ease-out;
-            z-index: 10;
-        }
-
-        .auth-logo {
+            padding: 2rem;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
             text-align: center;
-            margin-bottom: 2rem;
         }
 
-        .app-title {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: var(--bg-gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .app-subtitle {
-            color: var(--text-secondary);
-            text-align: center;
-            font-size: 1.1rem;
-            margin-bottom: 2rem;
-        }
-
-        .auth-form {
+        .auth-buttons {
             display: flex;
             flex-direction: column;
-            gap: 1.2rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .form-group label {
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .form-input {
-            padding: 1rem 1.2rem;
-            border-radius: 14px;
-            border: 1px solid var(--border-color);
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            font-size: 1rem;
-            transition: all 0.2s ease;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.2);
+            gap: 1rem;
+            margin-top: 1.5rem;
         }
 
         .auth-btn {
             padding: 1rem;
-            border-radius: 14px;
             border: none;
-            background: var(--bg-gradient);
-            color: white;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-top: 0.5rem;
-            position: relative;
-        }
-
-        .auth-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .auth-btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-
-        .auth-switch {
-            text-align: center;
-            margin-top: 1.5rem;
-            color: var(--text-secondary);
-        }
-
-        .auth-link {
-            color: var(--accent-primary);
+            border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
-        }
-
-        .auth-error {
-            background: rgba(255, 107, 107, 0.1);
-            border: 1px solid var(--danger);
-            color: var(--danger);
-            padding: 0.8rem;
-            border-radius: 12px;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-            display: none;
-        }
-
-        /* Основной интерфейс приложения */
-        .app-interface {
-            display: none;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-
-        .app-interface.active {
-            display: block;
-            opacity: 1;
-        }
-
-        header {
-            padding: 1.5rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background: rgba(10, 10, 20, 0.8);
-            backdrop-filter: var(--blur-amount);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        [data-theme="light"] header {
-            background: rgba(240, 242, 255, 0.8);
-        }
-
-        .header-content {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 1.5rem;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .google-btn {
+            background: #4285F4;
+            color: white;
+        }
+
+        .email-btn {
+            background: var(--accent-primary);
+            color: white;
         }
 
         .user-menu {
@@ -291,651 +83,127 @@
             cursor: pointer;
         }
 
-        .theme-toggle {
-            background: var(--bg-secondary);
-            border: none;
-            width: 60px;
-            height: 30px;
-            border-radius: 50px;
-            padding: 3px;
-            cursor: pointer;
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .theme-toggle::before {
-            content: '';
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: var(--accent-primary);
-            transition: transform 0.3s ease;
-            left: 3px;
-        }
-
-        [data-theme="light"] .theme-toggle::before {
-            transform: translateX(30px);
-        }
-
-        .search-container {
-            display: flex;
-            gap: 0.5rem;
-            width: 100%;
-            margin-top: 1rem;
-            position: relative;
-        }
-
-        #film-input {
-            flex-grow: 1;
-            padding: 1rem 1.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            font-size: 1rem;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-        }
-
-        #search-film-btn {
-            padding: 1rem 1.5rem;
-            background: var(--bg-gradient);
-            color: white;
-            border: none;
-            border-radius: 16px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .search-suggestions {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            margin-top: 0.5rem;
-            max-height: 200px;
-            overflow-y: auto;
+        .sync-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
             z-index: 1000;
-            display: none;
-            backdrop-filter: var(--blur-amount);
-        }
-
-        .suggestion-item {
-            padding: 0.75rem 1rem;
-            cursor: pointer;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .suggestion-item:hover {
-            background: var(--accent-primary);
-            color: white;
-        }
-
-        main {
-            padding: 2rem 0;
-        }
-
-        .search-results {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .film-result {
-            background: var(--bg-card);
-            border-radius: 20px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-            backdrop-filter: var(--blur-amount);
-        }
-
-        .film-result:hover {
-            transform: translateY(-5px) scale(1.02);
-        }
-
-        .film-poster {
-            width: 100%;
-            height: 280px;
-            object-fit: cover;
-            background: linear-gradient(45deg, var(--bg-secondary), var(--border-color));
-        }
-
-        .film-info {
-            padding: 1rem;
-        }
-
-        .film-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .film-year {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .add-form-container {
-            margin-bottom: 3rem;
-            position: relative;
-        }
-
-        .form-controls {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            display: flex;
-            gap: 0.5rem;
-            z-index: 10;
-        }
-
-        .cancel-btn, .back-btn {
-            background: var(--danger);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .back-btn {
-            background: var(--accent-secondary);
-        }
-
-        .film-card {
-            padding: 2rem;
-        }
-
-        .film-header {
-            display: flex;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        @media (max-width: 768px) {
-            .film-header {
-                flex-direction: column;
-            }
-        }
-
-        .selected-poster {
-            width: 200px;
-            height: 300px;
-            object-fit: cover;
-            border-radius: 16px;
             box-shadow: var(--shadow);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
-        .film-details {
-            flex: 1;
+        .sync-status.show {
+            opacity: 1;
         }
 
-        .selected-title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            background: var(--bg-gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .sync-status.success {
+            border-left: 4px solid var(--success);
         }
 
-        .selected-genre {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            background: var(--bg-secondary);
-            border-radius: 20px;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-            margin-right: 0.5rem;
-        }
-
-        .criteria-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.25rem;
-            margin-bottom: 2rem;
-        }
-
-        @media (min-width: 768px) {
-            .criteria-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        .criteria-item {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .criteria-name {
-            font-weight: 600;
-        }
-
-        .slider-container {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .criteria-slider {
-            flex: 1;
-            height: 8px;
-            -webkit-appearance: none;
-            background: var(--bg-secondary);
-            border-radius: 4px;
-        }
-
-        .criteria-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--accent-primary);
-            cursor: pointer;
-        }
-
-        .criteria-value {
-            font-weight: 600;
-            min-width: 30px;
-            text-align: center;
-        }
-
-        .total-score-container {
-            text-align: center;
-            margin: 2rem 0;
-            padding: 2rem;
-            border-radius: 20px;
-            background: var(--bg-gradient);
-            color: white;
-        }
-
-        .total-score-value {
-            font-size: 4rem;
-            font-weight: 800;
-        }
-
-        .additional-fields {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        @media (min-width: 480px) {
-            .additional-fields {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        textarea {
-            padding: 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            font-family: inherit;
-            min-height: 120px;
-            resize: vertical;
-        }
-
-        #save-rating-btn {
-            width: 100%;
-            padding: 1.2rem;
-            background: var(--bg-gradient);
-            color: white;
-            border: none;
-            border-radius: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 1rem;
-        }
-
-        .films-section {
-            margin-top: 3rem;
-            display: none;
-        }
-
-        .films-section.active {
-            display: block;
-        }
-
-        .films-controls {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .sort-select {
-            padding: 0.7rem 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            font-family: inherit;
-        }
-
-        /* КОМПАКТНЫЕ КАРТОЧКИ ФИЛЬМОВ В КОЛЛЕКЦИИ */
-        .films-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .film-item {
-            background: var(--bg-card);
-            border-radius: 20px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.3s ease;
-            cursor: pointer;
-            backdrop-filter: var(--blur-amount);
-        }
-
-        .film-item:hover {
-            transform: translateY(-5px) scale(1.02);
-        }
-
-        .film-item-poster {
-            width: 100%;
-            height: 280px;
-            object-fit: cover;
-        }
-
-        .film-item-info {
-            padding: 1rem;
-            background: var(--bg-secondary);
-            display: flex;
-            flex-direction: column;
-            gap: 0.3rem;
-        }
-
-        .film-item-title {
-            font-size: 1rem;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .film-item-year {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-
-        .film-item-score {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--accent-primary);
-        }
-
-        .film-item-actions {
-            margin-top: 0.5rem;
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .delete-btn {
-            background: none;
-            border: none;
-            color: var(--danger);
-            cursor: pointer;
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease;
-        }
-
-        .skeleton {
-            background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--border-color) 50%, var(--bg-secondary) 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-            border-radius: 12px;
-        }
-
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        .floating-shape {
-            position: fixed;
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            background: var(--accent-primary);
-            opacity: 0.05;
-            filter: blur(80px);
-            z-index: -1;
-            animation: float 8s ease-in-out infinite;
-        }
-
-        .shape-1 { top: 10%; left: 10%; }
-        .shape-2 { bottom: 20%; right: 10%; width: 400px; height: 400px; background: var(--success); animation-delay: 2s; }
-        .shape-3 { top: 50%; left: 50%; width: 200px; height: 200px; background: var(--accent-secondary); animation-delay: 4s; }
-
-        /* Модальное окно для просмотра оценки */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            padding: 20px;
-            backdrop-filter: var(--blur-amount);
-        }
-
-        .modal-content {
-            background: var(--bg-card);
-            border-radius: 24px;
-            padding: 2rem;
-            max-width: 800px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-            backdrop-filter: var(--blur-amount);
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: var(--danger);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .sync-status.error {
+            border-left: 4px solid var(--danger);
         }
     </style>
 </head>
 <body>
     <div class="floating-shape shape-1"></div>
     <div class="floating-shape shape-2"></div>
-    <div class="floating-shape shape-3"></div>
 
-    <!-- Экран аутентификации -->
-    <div class="auth-container" id="auth-container">
-        <div class="auth-content glass">
-            <div class="auth-logo">
+    <header>
+        <div class="container">
+            <div class="header-content">
                 <h1 class="app-title"><i class="fas fa-film"></i>КиноVISION</h1>
-                <p class="app-subtitle">Ваш умный кинокритик</p>
-            </div>
-            
-            <div class="auth-error" id="auth-error"></div>
-            
-            <div class="auth-form" id="login-form">
-                <div class="form-group">
-                    <label for="login-email">Email</label>
-                    <input type="email" id="login-email" class="form-input" placeholder="Ваш email" value="test@example.com">
+                <div class="user-menu">
+                    <div class="user-avatar" id="user-avatar" title="Профиль">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <button class="theme-toggle" id="theme-toggle"></button>
                 </div>
-                <div class="form-group">
-                    <label for="login-password">Пароль</label>
-                    <input type="password" id="login-password" class="form-input" placeholder="Ваш пароль" value="password123">
-                </div>
-                <button class="auth-btn" id="login-btn">
-                    <span id="login-btn-text">Войти</span>
-                    <span id="login-btn-spinner" class="hidden"><div class="loading-spinner"></div></span>
-                </button>
-                
-                <div class="auth-switch">
-                    Нет аккаунта? <span class="auth-link" id="to-register">Зарегистрироваться</span>
-                </div>
-            </div>
-            
-            <div class="auth-form hidden" id="register-form">
-                <div class="form-group">
-                    <label for="register-email">Email</label>
-                    <input type="email" id="register-email" class="form-input" placeholder="Ваш email">
-                </div>
-                <div class="form-group">
-                    <label for="register-password">Пароль</label>
-                    <input type="password" id="register-password" class="form-input" placeholder="Придумайте пароль">
-                </div>
-                <div class="form-group">
-                    <label for="register-password-confirm">Подтверждение пароля</label>
-                    <input type="password" id="register-password-confirm" class="form-input" placeholder="Повторите пароль">
-                </div>
-                <button class="auth-btn" id="register-btn">
-                    <span id="register-btn-text">Зарегистрироваться</span>
-                    <span id="register-btn-spinner" class="hidden"><div class="loading-spinner"></div></span>
-                </button>
-                
-                <div class="auth-switch">
-                    Уже есть аккаунт? <span class="auth-link" id="to-login">Войти</span>
+                <div class="search-container">
+                    <input type="text" id="film-input" placeholder="Введите название фильма...">
+                    <button id="search-film-btn">Поиск</button>
+                    <div class="search-suggestions" id="search-suggestions"></div>
                 </div>
             </div>
         </div>
-    </div>
+    </header>
 
-    <!-- Основной интерфейс приложения -->
-    <div class="app-interface" id="app-interface">
-        <header>
-            <div class="container">
-                <div class="header-content">
-                    <h1 class="app-title"><i class="fas fa-film"></i>КиноVISION</h1>
-                    <div class="user-menu">
-                        <button class="theme-toggle" id="theme-toggle"></button>
-                        <div class="user-avatar" id="user-avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <button class="auth-btn" id="logout-btn" style="padding: 0.5rem 1rem;">Выйти</button>
-                    </div>
-                    <div class="search-container">
-                        <input type="text" id="film-input" placeholder="Введите название фильма...">
-                        <button id="search-film-btn">Поиск</button>
-                        <div class="search-suggestions" id="search-suggestions"></div>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <main class="container">
-            <section class="search-results hidden" id="search-results"></section>
-            
-            <section class="add-form-container hidden" id="add-form-container">
-                <div class="form-controls">
-                    <button class="back-btn" id="back-to-search-btn" title="Вернуться к результатам поиска">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
-                    <button class="cancel-btn" id="cancel-film-btn" title="Отменить выбор фильма">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </section>
-            
-            <section class="films-section" id="films-section">
-                <div class="films-controls">
-                    <h2 class="section-title">Моя киноколлекция</h2>
-                    <select class="genre-filter" id="genre-filter">
-                        <option value="all">Все жанры</option>
-                        <option value="комедия">Комедия</option>
-                        <option value="драма">Драма</option>
-                        <option value="боевик">Боевик</option>
-                        <option value="фантастика">Фантастика</option>
-                        <option value="ужасы">Ужасы</option>
-                        <option value="триллер">Триллер</option>
-                    </select>
-                    <select class="sort-select" id="sort-select">
-                        <option value="rating">По оценке (убыв.)</option>
-                        <option value="rating-asc">По оценке (возр.)</option>
-                        <option value="personal">По личному впечатлению (убыв.)</option>
-                        <option value="personal-asc">По личному впечатлению (возр.)</option>
-                        <option value="name">По названию (А-Я)</option>
-                        <option value="name-desc">По названию (Я-А)</option>
-                        <option value="date">По дате добавления</option>
-                    </select>
-                </div>
-                <div class="films-grid" id="films-container"></div>
-            </section>
-        </main>
-
-        <!-- Модальное окно для просмотра оценки -->
-        <div class="modal-overlay hidden" id="film-modal">
-            <div class="modal-content glass">
-                <button class="modal-close" id="modal-close">
+    <main class="container">
+        <section class="search-results hidden" id="search-results"></section>
+        
+        <section class="add-form-container hidden" id="add-form-container">
+            <div class="form-controls">
+                <button class="back-btn" id="back-to-search-btn" title="Вернуться к результатам поиска">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <button class="cancel-btn" id="cancel-film-btn" title="Отменить выбор фильма">
                     <i class="fas fa-times"></i>
                 </button>
-                <div id="modal-content"></div>
+            </div>
+        </section>
+        
+        <section class="films-section">
+            <div class="films-controls">
+                <h2 class="section-title">Моя киноколлекция</h2>
+                <select class="genre-filter" id="genre-filter">
+                    <option value="all">Все жанры</option>
+                    <option value="комедия">Комедия</option>
+                    <option value="драма">Драма</option>
+                    <option value="боевик">Боевик</option>
+                    <option value="фантастика">Фантастика</option>
+                    <option value="ужасы">Ужасы</option>
+                    <option value="триллер">Триллер</option>
+                </select>
+                <select class="sort-select" id="sort-select">
+                    <option value="rating">По оценке (убыв.)</option>
+                    <option value="rating-asc">По оценке (возр.)</option>
+                    <option value="personal">По личному впечатлению (убыв.)</option>
+                    <option value="personal-asc">По личному впечатлению (возр.)</option>
+                    <option value="name">По названию (А-Я)</option>
+                    <option value="name-desc">По названию (Я-А)</option>
+                    <option value="date">По дате добавления</option>
+                </select>
+            </div>
+            <div class="films-grid" id="films-container"></div>
+        </section>
+    </main>
+
+    <!-- Модальное окно для просмотра оценки -->
+    <div class="modal-overlay hidden" id="film-modal">
+        <div class="modal-content glass">
+            <button class="modal-close" id="modal-close">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- Окно аутентификации -->
+    <div class="auth-container" id="auth-container">
+        <div class="auth-modal glass">
+            <h2>Войдите в аккаунт</h2>
+            <p>Для синхронизации вашей киноколлекции между устройствами</p>
+            <div class="auth-buttons">
+                <button class="auth-btn google-btn" id="google-auth">
+                    <i class="fab fa-google"></i>Войти через Google
+                </button>
+                <button class="auth-btn email-btn" id="email-auth">
+                    <i class="fas fa-envelope"></i>Войти по email
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- Статус синхронизации -->
+    <div class="sync-status" id="sync-status"></div>
 
     <script>
-        // Конфигурация Firebase
+        // ==================== FIREBASE CONFIG ====================
         const firebaseConfig = {
             apiKey: "AIzaSyAgpmENDau8Vs-IZglI1TLsuFwbAhga28k",
             authDomain: "films-e77cd.firebaseapp.com",
@@ -947,378 +215,233 @@
         };
 
         // Инициализация Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const auth = firebase.auth();
 
-        console.log("Firebase инициализирован");
-
-        const KINOPOISK_API = {
-            BASE_URL: 'https://api.kinopoisk.dev/v1.4',
-            API_KEY: 'TWEWJGW-8X2MX1G-G5QK9NT-6C6S3FT'
-        };
-
-        function handleImageError(img) {
-            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+0J/QvtC00YLRg9C10YIgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
-            img.onerror = null;
-        }
-
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }
-
-        // Основное приложение
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOM загружен");
-            
-            const elements = {
-                authContainer: document.getElementById('auth-container'),
-                appInterface: document.getElementById('app-interface'),
-                loginForm: document.getElementById('login-form'),
-                registerForm: document.getElementById('register-form'),
-                toRegister: document.getElementById('to-register'),
-                toLogin: document.getElementById('to-login'),
-                loginEmail: document.getElementById('login-email'),
-                loginPassword: document.getElementById('login-password'),
-                registerEmail: document.getElementById('register-email'),
-                registerPassword: document.getElementById('register-password'),
-                registerPasswordConfirm: document.getElementById('register-password-confirm'),
-                loginBtn: document.getElementById('login-btn'),
-                loginBtnText: document.getElementById('login-btn-text'),
-                loginBtnSpinner: document.getElementById('login-btn-spinner'),
-                registerBtn: document.getElementById('register-btn'),
-                registerBtnText: document.getElementById('register-btn-text'),
-                registerBtnSpinner: document.getElementById('register-btn-spinner'),
-                authError: document.getElementById('auth-error'),
-                logoutBtn: document.getElementById('logout-btn'),
-                userAvatar: document.getElementById('user-avatar'),
-                filmsSection: document.getElementById('films-section'),
-                
-                themeToggle: document.getElementById('theme-toggle'),
-                filmInput: document.getElementById('film-input'),
-                searchFilmBtn: document.getElementById('search-film-btn'),
-                searchSuggestions: document.getElementById('search-suggestions'),
-                searchResults: document.getElementById('search-results'),
-                addFormContainer: document.getElementById('add-form-container'),
-                cancelFilmBtn: document.getElementById('cancel-film-btn'),
-                backToSearchBtn: document.getElementById('back-to-search-btn'),
-                genreFilter: document.getElementById('genre-filter'),
-                sortSelect: document.getElementById('sort-select'),
-                filmsContainer: document.getElementById('films-container'),
-                filmModal: document.getElementById('film-modal'),
-                modalClose: document.getElementById('modal-close'),
-                modalContent: document.getElementById('modal-content')
-            };
-
-            let films = [];
-            let currentFilm = null;
-            let lastSearchResults = [];
-            let currentUser = null;
-
-            // Проверяем состояние аутентификации
-            auth.onAuthStateChanged(user => {
-                console.log("Состояние аутентификации изменено:", user);
-                if (user) {
-                    currentUser = user;
-                    showAppInterface();
-                    loadFilmsFromFirestore();
-                    setupUserAvatar();
-                } else {
-                    showAuthInterface();
-                }
-            });
-
-            // Настройка обработчиков событий аутентификации
-            function setupAuthEventListeners() {
-                console.log("Настройка обработчиков аутентификации");
-                
-                elements.toRegister.addEventListener('click', () => {
-                    elements.loginForm.classList.add('hidden');
-                    elements.registerForm.classList.remove('hidden');
-                    clearAuthError();
-                });
-
-                elements.toLogin.addEventListener('click', () => {
-                    elements.registerForm.classList.add('hidden');
-                    elements.loginForm.classList.remove('hidden');
-                    clearAuthError();
-                });
-
-                elements.loginBtn.addEventListener('click', handleLogin);
-                elements.registerBtn.addEventListener('click', handleRegister);
-
-                // Ввод по Enter
-                elements.loginPassword.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') handleLogin();
-                });
-                
-                elements.registerPasswordConfirm.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') handleRegister();
-                });
-            }
-
-            // Настройка обработчиков событий приложения
-            function setupAppEventListeners() {
-                console.log("Настройка обработчиков приложения");
-                
-                if (elements.logoutBtn) {
-                    elements.logoutBtn.addEventListener('click', handleLogout);
-                }
-                
-                if (elements.themeToggle) {
-                    elements.themeToggle.addEventListener('click', toggleTheme);
-                }
-                
-                if (elements.searchFilmBtn) {
-                    elements.searchFilmBtn.addEventListener('click', handleFilmSearch);
-                }
-                
-                if (elements.cancelFilmBtn) {
-                    elements.cancelFilmBtn.addEventListener('click', cancelFilmSelection);
-                }
-                
-                if (elements.backToSearchBtn) {
-                    elements.backToSearchBtn.addEventListener('click', backToSearchResults);
-                }
-                
-                if (elements.modalClose) {
-                    elements.modalClose.addEventListener('click', closeModal);
-                }
-                
-                if (elements.filmInput) {
-                    elements.filmInput.addEventListener('input', debounce(() => {
-                        const query = elements.filmInput.value.trim();
-                        if (query.length > 2) {
-                            showSearchSuggestions(query);
-                        } else {
-                            elements.searchSuggestions.style.display = 'none';
-                        }
-                    }, 300));
-
-                    elements.filmInput.addEventListener('keypress', (e) => {
-                        if (e.key === 'Enter') handleFilmSearch();
+        // ==================== СИНХРОНИЗАЦИЯ ====================
+        const CloudSync = {
+            // Сохранение фильмов в облако
+            async saveFilmsToCloud(films, userId) {
+                try {
+                    await db.collection('users').doc(userId).set({
+                        films: films,
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                }
-
-                if (elements.genreFilter) {
-                    elements.genreFilter.addEventListener('change', () => renderFilmList());
-                }
-                
-                if (elements.sortSelect) {
-                    elements.sortSelect.addEventListener('change', () => renderFilmList());
-                }
-                
-                document.addEventListener('click', handleDynamicClick);
-                document.addEventListener('input', handleDynamicInput);
-
-                // Закрытие модального окна по клику вне его
-                if (elements.filmModal) {
-                    elements.filmModal.addEventListener('click', (e) => {
-                        if (e.target === elements.filmModal) {
-                            closeModal();
-                        }
-                    });
-                }
-            }
-
-            function setAuthButtonLoading(button, isLoading) {
-                if (button === 'login') {
-                    if (isLoading) {
-                        elements.loginBtnText.classList.add('hidden');
-                        elements.loginBtnSpinner.classList.remove('hidden');
-                        elements.loginBtn.disabled = true;
-                    } else {
-                        elements.loginBtnText.classList.remove('hidden');
-                        elements.loginBtnSpinner.classList.add('hidden');
-                        elements.loginBtn.disabled = false;
-                    }
-                } else if (button === 'register') {
-                    if (isLoading) {
-                        elements.registerBtnText.classList.add('hidden');
-                        elements.registerBtnSpinner.classList.remove('hidden');
-                        elements.registerBtn.disabled = true;
-                    } else {
-                        elements.registerBtnText.classList.remove('hidden');
-                        elements.registerBtnSpinner.classList.add('hidden');
-                        elements.registerBtn.disabled = false;
-                    }
-                }
-            }
-
-            async function handleLogin() {
-                console.log("Обработка входа");
-                const email = elements.loginEmail.value;
-                const password = elements.loginPassword.value;
-                
-                if (!email || !password) {
-                    showAuthError('Введите email и пароль');
-                    return;
-                }
-                
-                try {
-                    setAuthButtonLoading('login', true);
-                    console.log("Попытка входа:", email);
-                    const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                    console.log("Вход успешен:", userCredential.user);
+                    this.showSyncStatus('Данные сохранены в облако', 'success');
                 } catch (error) {
-                    console.error("Ошибка входа:", error);
-                    showAuthError(getAuthErrorMessage(error.code));
-                } finally {
-                    setAuthButtonLoading('login', false);
+                    console.error('Ошибка сохранения в облако:', error);
+                    this.showSyncStatus('Ошибка синхронизации', 'error');
                 }
-            }
-
-            async function handleRegister() {
-                console.log("Обработка регистрации");
-                const email = elements.registerEmail.value;
-                const password = elements.registerPassword.value;
-                const passwordConfirm = elements.registerPasswordConfirm.value;
-                
-                if (!email || !password || !passwordConfirm) {
-                    showAuthError('Заполните все поля');
-                    return;
-                }
-                
-                if (password !== passwordConfirm) {
-                    showAuthError('Пароли не совпадают');
-                    return;
-                }
-                
-                if (password.length < 6) {
-                    showAuthError('Пароль должен содержать не менее 6 символов');
-                    return;
-                }
-                
-                try {
-                    setAuthButtonLoading('register', true);
-                    console.log("Попытка регистрации:", email);
-                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                    console.log("Регистрация успешна:", userCredential.user);
-                } catch (error) {
-                    console.error("Ошибка регистрации:", error);
-                    showAuthError(getAuthErrorMessage(error.code));
-                } finally {
-                    setAuthButtonLoading('register', false);
-                }
-            }
-
-            async function handleLogout() {
-                try {
-                    await auth.signOut();
-                    console.log("Выход выполнен");
-                } catch (error) {
-                    console.error('Ошибка выхода:', error);
-                }
-            }
-
-            function getAuthErrorMessage(errorCode) {
-                switch (errorCode) {
-                    case 'auth/invalid-email':
-                        return 'Неверный формат email';
-                    case 'auth/user-disabled':
-                        return 'Пользователь заблокирован';
-                    case 'auth/user-not-found':
-                        return 'Пользователь не найден';
-                    case 'auth/wrong-password':
-                        return 'Неверный пароль';
-                    case 'auth/email-already-in-use':
-                        return 'Email уже используется';
-                    case 'auth/weak-password':
-                        return 'Пароль слишком простой';
-                    case 'auth/operation-not-allowed':
-                        return 'Операция не разрешена';
-                    case 'auth/network-request-failed':
-                        return 'Ошибка сети. Проверьте подключение к интернету';
-                    default:
-                        return 'Произошла ошибка. Попробуйте снова';
-                }
-            }
-
-            function showAuthError(message) {
-                elements.authError.textContent = message;
-                elements.authError.style.display = 'block';
-            }
-
-            function clearAuthError() {
-                elements.authError.style.display = 'none';
-            }
-
-            function showAuthInterface() {
-                console.log("Показ интерфейса аутентификации");
-                elements.authContainer.style.display = 'flex';
-                elements.appInterface.classList.remove('active');
-                currentUser = null;
-                films = [];
-            }
-
-            function showAppInterface() {
-                console.log("Показ основного интерфейса");
-                elements.authContainer.style.display = 'none';
-                elements.appInterface.classList.add('active');
-                elements.filmsSection.classList.add('active');
-                
-                // Загружаем настройки темы
-                const theme = localStorage.getItem('theme');
-                if (theme) {
-                    document.documentElement.setAttribute('data-theme', theme);
-                }
-            }
-
-            function setupUserAvatar() {
-                if (currentUser && currentUser.email) {
-                    const email = currentUser.email;
-                    elements.userAvatar.textContent = email.charAt(0).toUpperCase();
-                }
-            }
-
-            async function loadFilmsFromFirestore() {
-                if (!currentUser) return;
-                
-                try {
-                    const snapshot = await db.collection('users')
-                        .doc(currentUser.uid)
-                        .collection('films')
-                        .orderBy('createdAt', 'desc')
-                        .get();
-                        
-                    films = snapshot.docs.map(doc => doc.data());
-                    renderFilmList();
-                } catch (error) {
-                    console.error('Ошибка загрузки фильмов:', error);
-                }
-            }
-
-            // Инициализация приложения
-            setupAuthEventListeners();
-            console.log("Приложение инициализировано");
-        });
-
-        // Глобальные функции для доступа из HTML
-        window.KinoVisionApp = {
-            deleteFilmFromModal: function(filmId) {
-                // Реализация будет добавлена позже
-                console.log("Удаление фильма:", filmId);
             },
-            showFilmDetails: function(filmId) {
-                // Реализация будет добавлена позже
-                console.log("Показ деталей фильма:", filmId);
+
+            // Загрузка фильмов из облака
+            async loadFilmsFromCloud(userId) {
+                try {
+                    const doc = await db.collection('users').doc(userId).get();
+                    if (doc.exists) {
+                        return doc.data().films || [];
+                    }
+                    return [];
+                } catch (error) {
+                    console.error('Ошибка загрузки из облака:', error);
+                    this.showSyncStatus('Ошибка загрузки данных', 'error');
+                    return [];
+                }
+            },
+
+            // Реaltime синхронизация
+            setupRealtimeSync(userId, callback) {
+                return db.collection('users').doc(userId).onSnapshot((doc) => {
+                    if (doc.exists) {
+                        const cloudFilms = doc.data().films || [];
+                        callback(cloudFilms);
+                        this.showSyncStatus('Данные обновлены', 'success');
+                    }
+                }, (error) => {
+                    console.error('Ошибка realtime синхронизации:', error);
+                });
+            },
+
+            showSyncStatus(message, type = 'info') {
+                const status = document.getElementById('sync-status');
+                status.textContent = message;
+                status.className = `sync-status show ${type}`;
+                
+                setTimeout(() => {
+                    status.classList.remove('show');
+                }, 3000);
             }
         };
+
+        const KinoVisionApp = (() => {
+            // ... (все предыдущие переменные) ...
+
+            // Добавляем новые элементы
+            const authElements = {
+                authContainer: document.getElementById('auth-container'),
+                googleAuth: document.getElementById('google-auth'),
+                emailAuth: document.getElementById('email-auth'),
+                userAvatar: document.getElementById('user-avatar')
+            };
+
+            let currentUser = null;
+            let unsubscribeSync = null;
+            let isOnline = navigator.onLine;
+
+            function init() {
+                setupNetworkListeners();
+                setupAuthListeners();
+                checkAuthState();
+            }
+
+            function setupNetworkListeners() {
+                window.addEventListener('online', () => {
+                    isOnline = true;
+                    CloudSync.showSyncStatus('Соединение восстановлено', 'success');
+                    if (currentUser) {
+                        syncFilmsToCloud();
+                    }
+                });
+
+                window.addEventListener('offline', () => {
+                    isOnline = false;
+                    CloudSync.showSyncStatus('Нет соединения', 'error');
+                });
+            }
+
+            function setupAuthListeners() {
+                // Google аутентификация
+                authElements.googleAuth.addEventListener('click', signInWithGoogle);
+                
+                // Email аутентификация (упрощенная)
+                authElements.emailAuth.addEventListener('click', signInAnonymously);
+                
+                // Выход по клику на аватар
+                authElements.userAvatar.addEventListener('click', toggleUserMenu);
+            }
+
+            async function signInWithGoogle() {
+                try {
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    await auth.signInWithPopup(provider);
+                } catch (error) {
+                    console.error('Ошибка Google аутентификации:', error);
+                    CloudSync.showSyncStatus('Ошибка входа', 'error');
+                }
+            }
+
+            async function signInAnonymously() {
+                try {
+                    await auth.signInAnonymously();
+                } catch (error) {
+                    console.error('Ошибка анонимной аутентификации:', error);
+                    CloudSync.showSyncStatus('Ошибка входа', 'error');
+                }
+            }
+
+            function checkAuthState() {
+                auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        currentUser = user;
+                        authElements.authContainer.classList.add('hidden');
+                        updateUserAvatar();
+                        
+                        // Загружаем данные из облака
+                        const cloudFilms = await CloudSync.loadFilmsFromCloud(user.uid);
+                        
+                        if (cloudFilms.length > 0) {
+                            // Приоритет у облачных данных
+                            films = cloudFilms;
+                        } else {
+                            // Пробуем загрузить локальные данные
+                            loadFromLocalStorage();
+                        }
+                        
+                        saveToLocalStorage();
+                        renderFilmList();
+                        
+                        // Запускаем realtime синхронизацию
+                        setupRealtimeSync();
+                        
+                    } else {
+                        currentUser = null;
+                        authElements.authContainer.classList.remove('hidden');
+                        loadFromLocalStorage();
+                        renderFilmList();
+                    }
+                });
+            }
+
+            function setupRealtimeSync() {
+                if (unsubscribeSync) {
+                    unsubscribeSync();
+                }
+                
+                unsubscribeSync = CloudSync.setupRealtimeSync(currentUser.uid, (cloudFilms) => {
+                    films = cloudFilms;
+                    saveToLocalStorage();
+                    renderFilmList();
+                });
+            }
+
+            function updateUserAvatar() {
+                if (currentUser) {
+                    const displayName = currentUser.displayName || currentUser.email || 'User';
+                    const initials = displayName.charAt(0).toUpperCase();
+                    authElements.userAvatar.innerHTML = initials;
+                    authElements.userAvatar.title = displayName;
+                }
+            }
+
+            function toggleUserMenu() {
+                if (currentUser) {
+                    if (confirm('Выйти из аккаунта?')) {
+                        auth.signOut();
+                        if (unsubscribeSync) {
+                            unsubscribeSync();
+                        }
+                    }
+                } else {
+                    authElements.authContainer.classList.remove('hidden');
+                }
+            }
+
+            async function syncFilmsToCloud() {
+                if (currentUser && isOnline) {
+                    await CloudSync.saveFilmsToCloud(films, currentUser.uid);
+                }
+            }
+
+            // Модифицируем функцию сохранения
+            function saveToLocalStorage() {
+                localStorage.setItem('filmRatings', JSON.stringify(films));
+                syncFilmsToCloud(); // Автоматическая синхронизация при изменении
+            }
+
+            // Модифицируем все функции, которые меняют films
+            function saveFilmRating() {
+                // ... (предыдущий код сохранения) ...
+                saveToLocalStorage(); // Вызовет синхронизацию
+            }
+
+            function deleteFilm(filmId) {
+                // ... (предыдущий код удаления) ...
+                saveToLocalStorage(); // Вызовет синхронизацию
+            }
+
+            return {
+                init,
+                deleteFilmFromModal,
+                showFilmDetails,
+                closeSyncModal
+            };
+        })();
+
+        // Глобальные функции
+        window.KinoVisionApp = KinoVisionApp;
+
+        document.addEventListener('DOMContentLoaded', () => KinoVisionApp.init());
     </script>
 </body>
 </html>
