@@ -10,43 +10,674 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <style>
-        /* ... (все стили остаются без изменений) ... */
-        
+        :root {
+            --bg-primary: #0a0a14;
+            --bg-secondary: #15152a;
+            --bg-card: #1e1e38;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0c0;
+            --accent-primary: #7b68ee;
+            --accent-secondary: #6a5acd;
+            --success: #50c878;
+            --danger: #ff6b6b;
+            --border-color: #2a2a4a;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --glass: rgba(30, 30, 56, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f0f2ff;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-gradient: linear-gradient(135deg, #a3bded 0%, #6991c7 100%);
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a4a6e;
+            --accent-primary: #5c6bc0;
+            --accent-secondary: #3f51b5;
+            --border-color: #d0d0e2;
+            --shadow: 0 8px 32px rgba(100, 100, 150, 0.1);
+            --glass: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: var(--transition);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .glass {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        header {
+            padding: 1.5rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .app-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: var(--bg-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: none;
+            width: 60px;
+            height: 30px;
+            border-radius: 50px;
+            padding: 3px;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            transition: transform 0.3s ease;
+            left: 3px;
+        }
+
+        [data-theme="light"] .theme-toggle::before {
+            transform: translateX(30px);
+        }
+
+        .search-container {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        #film-input {
+            flex-grow: 1;
+            padding: 1rem 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 1rem;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        #search-film-btn {
+            padding: 1rem 1.5rem;
+            background: var(--bg-gradient);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .suggestion-item:hover {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        main {
+            padding: 2rem 0;
+        }
+
+        .search-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .film-result {
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .film-result:hover {
+            transform: translateY(-5px);
+        }
+
+        .film-poster {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            background: linear-gradient(45deg, var(--bg-secondary), var(--border-color));
+        }
+
+        .film-info {
+            padding: 1rem;
+        }
+
+        .film-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .film-year {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .add-form-container {
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .form-controls {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 10;
+        }
+
+        .cancel-btn, .back-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-btn {
+            background: var(--accent-secondary);
+        }
+
+        .film-card {
+            padding: 2rem;
+        }
+
+        .film-header {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .film-header {
+                flex-direction: column;
+            }
+        }
+
+        .selected-poster {
+            width: 200px;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .film-details {
+            flex: 1;
+        }
+
+        .selected-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: var(--bg-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .selected-genre {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            margin-right: 0.5rem;
+        }
+
+        .criteria-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .criteria-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .criteria-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .criteria-name {
+            font-weight: 600;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .criteria-slider {
+            flex: 1;
+            height: 8px;
+            -webkit-appearance: none;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+
+        .criteria-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            cursor: pointer;
+        }
+
+        .criteria-value {
+            font-weight: 600;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .total-score-container {
+            text-align: center;
+            margin: 2rem 0;
+            padding: 2rem;
+            border-radius: 20px;
+            background: var(--bg-gradient);
+            color: white;
+        }
+
+        .total-score-value {
+            font-size: 4rem;
+            font-weight: 800;
+        }
+
+        .additional-fields {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (min-width: 480px) {
+            .additional-fields {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        select, textarea {
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-family: inherit;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        #save-rating-btn {
+            width: 100%;
+            padding: 1.2rem;
+            background: var(--bg-gradient);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        .films-section {
+            margin-top: 3rem;
+        }
+
+        .films-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .sort-select {
+            padding: 0.7rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-family: inherit;
+        }
+
+        /* КОМПАКТНЫЕ КАРТОЧКИ ФИЛЬМОВ В КОЛЛЕКЦИИ */
+        .films-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .film-item {
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .film-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .film-item-poster {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+        }
+
+        .film-item-info {
+            padding: 1rem;
+            background: var(--bg-secondary);
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .film-item-title {
+            font-size: 1rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .film-item-year {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .film-item-score {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        .film-item-actions {
+            margin-top: 0.5rem;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--border-color) 50%, var(--bg-secondary) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .floating-shape {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            opacity: 0.05;
+            filter: blur(80px);
+            z-index: -1;
+        }
+
+        .shape-1 { top: 10%; left: 10%; }
+        .shape-2 { bottom: 20%; right: 10%; width: 400px; height: 400px; background: var(--success); }
+
+        /* Модальное окно для просмотра оценки */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Стили для аутентификации */
+        .auth-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 20, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            backdrop-filter: blur(10px);
+        }
+
+        .auth-modal {
+            background: var(--bg-card);
+            padding: 3rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--glass-border);
+        }
+
+        .auth-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            background: var(--bg-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: var(--bg-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
         .auth-buttons {
             display: flex;
             flex-direction: column;
             gap: 1rem;
-            margin-top: 1.5rem;
         }
 
         .auth-btn {
-            padding: 1rem;
+            padding: 1.2rem;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
             font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
-            transition: transform 0.2s ease;
+            gap: 0.8rem;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
         }
 
         .auth-btn:hover {
             transform: translateY(-2px);
+            box-shadow: var(--shadow);
         }
 
         .auth-btn:active {
             transform: translateY(0);
-        }
-
-        .google-btn {
-            background: #4285F4;
-            color: white;
-        }
-
-        .google-btn:hover {
-            background: #357ae8;
         }
 
         .anon-btn {
@@ -65,8 +696,8 @@
         }
 
         .user-avatar {
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             background: var(--bg-gradient);
             display: flex;
@@ -75,32 +706,168 @@
             color: white;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s ease;
+            transition: transform 0.3s ease;
+            font-size: 1.2rem;
         }
 
         .user-avatar:hover {
             transform: scale(1.1);
         }
+
+        .sync-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--success);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sync-status.show {
+            opacity: 1;
+        }
+
+        .sync-status.error {
+            border-left-color: var(--danger);
+        }
+
+        .auth-features {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .feature-icon {
+            color: var(--success);
+            font-size: 1.1rem;
+        }
     </style>
 </head>
 <body>
-    <!-- ... (остальная разметка без изменений) ... -->
+    <div class="floating-shape shape-1"></div>
+    <div class="floating-shape shape-2"></div>
+
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <h1 class="app-title"><i class="fas fa-film"></i>КиноVISION</h1>
+                <div class="user-menu">
+                    <div class="user-avatar" id="user-avatar" title="Профиль">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <button class="theme-toggle" id="theme-toggle"></button>
+                </div>
+                <div class="search-container">
+                    <input type="text" id="film-input" placeholder="Введите название фильма...">
+                    <button id="search-film-btn">Поиск</button>
+                    <div class="search-suggestions" id="search-suggestions"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="search-results hidden" id="search-results"></section>
+        
+        <section class="add-form-container hidden" id="add-form-container">
+            <div class="form-controls">
+                <button class="back-btn" id="back-to-search-btn" title="Вернуться к результатам поиска">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <button class="cancel-btn" id="cancel-film-btn" title="Отменить выбор фильма">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </section>
+        
+        <section class="films-section">
+            <div class="films-controls">
+                <h2 class="section-title">Моя киноколлекция</h2>
+                <select class="genre-filter" id="genre-filter">
+                    <option value="all">Все жанры</option>
+                    <option value="комедия">Комедия</option>
+                    <option value="драма">Драма</option>
+                    <option value="боевик">Боевик</option>
+                    <option value="фантастика">Фантастика</option>
+                    <option value="ужасы">Ужасы</option>
+                    <option value="триллер">Триллер</option>
+                </select>
+                <select class="sort-select" id="sort-select">
+                    <option value="rating">По оценке (убыв.)</option>
+                    <option value="rating-asc">По оценке (возр.)</option>
+                    <option value="personal">По личному впечатлению (убыв.)</option>
+                    <option value="personal-asc">По личному впечатлению (возр.)</option>
+                    <option value="name">По названию (А-Я)</option>
+                    <option value="name-desc">По названию (Я-А)</option>
+                    <option value="date">По дате добавления</option>
+                </select>
+            </div>
+            <div class="films-grid" id="films-container"></div>
+        </section>
+    </main>
+
+    <!-- Модальное окно для просмотра оценки -->
+    <div class="modal-overlay hidden" id="film-modal">
+        <div class="modal-content glass">
+            <button class="modal-close" id="modal-close">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
 
     <!-- Окно аутентификации -->
     <div class="auth-container" id="auth-container">
         <div class="auth-modal glass">
-            <h2>🔄 Синхронизация коллекции</h2>
-            <p>Войдите, чтобы ваша киноколлекция была доступна на всех устройствах</p>
+            <div class="auth-icon">
+                <i class="fas fa-film"></i>
+            </div>
+            <h2 class="auth-title">КиноVISION</h2>
+            <p class="auth-subtitle">Войдите, чтобы ваша киноколлекция была доступна на всех устройствах</p>
+            
             <div class="auth-buttons">
                 <button class="auth-btn anon-btn" id="anon-auth">
-                    <i class="fas fa-user-clock"></i>Быстрый вход (рекомендуется)
+                    <i class="fas fa-cloud"></i>Войти и синхронизировать
                 </button>
             </div>
-            <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-secondary);">
-                🔒 Ваши данные сохраняются анонимно и безопасно
-            </p>
+
+            <div class="auth-features">
+                <div class="feature-item">
+                    <i class="fas fa-sync feature-icon"></i>
+                    <span>Синхронизация между устройствами</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-shield-alt feature-icon"></i>
+                    <span>Ваши данные защищены</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-cloud feature-icon"></i>
+                    <span>Облачное сохранение</span>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Статус синхронизации -->
+    <div class="sync-status" id="sync-status"></div>
 
     <script>
         // ==================== FIREBASE CONFIG ====================
@@ -139,6 +906,7 @@
                     return doc.exists ? doc.data().films || [] : [];
                 } catch (error) {
                     console.error('Ошибка загрузки:', error);
+                    this.showSyncStatus('❌ Ошибка загрузки данных');
                     return [];
                 }
             },
@@ -147,7 +915,10 @@
                 return db.collection('users').doc(userId).onSnapshot((doc) => {
                     if (doc.exists) {
                         callback(doc.data().films || []);
+                        this.showSyncStatus('🔄 Данные обновлены');
                     }
+                }, (error) => {
+                    console.error('Ошибка синхронизации:', error);
                 });
             },
 
@@ -156,45 +927,133 @@
                 status.textContent = message;
                 status.className = 'sync-status show';
                 
-                setTimeout(() => status.classList.remove('show'), 3000);
+                setTimeout(() => {
+                    status.classList.remove('show');
+                }, 3000);
             }
         };
 
+        // Глобальная функция для обработки ошибок изображений
+        function handleImageError(img) {
+            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+0J/QvtC00YLRg9C10YIgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
+            img.onerror = null;
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
         const KinoVisionApp = (() => {
+            const criteriaConfig = [
+                { id: 'script', name: 'Сценарий', weight: 0.5 },
+                { id: 'acting', name: 'Актерская игра', weight: 0.15 },
+                { id: 'logic', name: 'Сюжет и логика', weight: 0.1 },
+                { id: 'sound', name: 'Звук и музыка', weight: 0.1 },
+                { id: 'cinematography', name: 'Визуал и операторская', weight: 0.05 },
+                { id: 'graphics', name: 'Графика и эффекты', weight: 0.1 }
+            ];
+
             const elements = {
-                // ... (существующие элементы) ...
+                themeToggle: document.getElementById('theme-toggle'),
+                filmInput: document.getElementById('film-input'),
+                searchFilmBtn: document.getElementById('search-film-btn'),
+                searchSuggestions: document.getElementById('search-suggestions'),
+                searchResults: document.getElementById('search-results'),
+                addFormContainer: document.getElementById('add-form-container'),
+                cancelFilmBtn: document.getElementById('cancel-film-btn'),
+                backToSearchBtn: document.getElementById('back-to-search-btn'),
+                genreFilter: document.getElementById('genre-filter'),
+                sortSelect: document.getElementById('sort-select'),
+                filmsContainer: document.getElementById('films-container'),
+                filmModal: document.getElementById('film-modal'),
+                modalClose: document.getElementById('modal-close'),
+                modalContent: document.getElementById('modal-content'),
                 authContainer: document.getElementById('auth-container'),
                 anonAuth: document.getElementById('anon-auth'),
                 userAvatar: document.getElementById('user-avatar'),
                 syncStatus: document.getElementById('sync-status')
             };
 
+            let films = [];
+            let currentFilm = null;
             let currentUser = null;
             let unsubscribeSync = null;
+            let lastSearchResults = [];
+            let isOnline = navigator.onLine;
 
             function init() {
+                loadFromLocalStorage();
                 setupEventListeners();
+                renderFilmList();
                 checkAuthState();
                 setupNetworkListeners();
             }
 
             function setupEventListeners() {
-                // Анонимная аутентификация
+                // Переключение темы
+                elements.themeToggle.addEventListener('click', toggleTheme);
+
+                // Поиск фильмов
+                elements.searchFilmBtn.addEventListener('click', handleFilmSearch);
+                elements.cancelFilmBtn.addEventListener('click', cancelFilmSelection);
+                elements.backToSearchBtn.addEventListener('click', backToSearchResults);
+                
+                elements.filmInput.addEventListener('input', debounce(() => {
+                    const query = elements.filmInput.value.trim();
+                    if (query.length > 2) {
+                        showSearchSuggestions(query);
+                    } else {
+                        elements.searchSuggestions.style.display = 'none';
+                    }
+                }, 300));
+
+                elements.filmInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') handleFilmSearch();
+                });
+
+                // Фильтрация и сортировка
+                elements.genreFilter.addEventListener('change', () => renderFilmList());
+                elements.sortSelect.addEventListener('change', () => renderFilmList());
+
+                // Аутентификация
                 elements.anonAuth.addEventListener('click', signInAnonymously);
-                
-                // Клик по аватару
                 elements.userAvatar.addEventListener('click', toggleUserMenu);
-                
-                // ... (остальные обработчики) ...
+
+                // Модальное окно
+                elements.modalClose.addEventListener('click', closeModal);
+                elements.filmModal.addEventListener('click', (e) => {
+                    if (e.target === elements.filmModal) closeModal();
+                });
+
+                // Делегирование событий
+                document.addEventListener('click', handleDynamicClick);
+                document.addEventListener('input', handleDynamicInput);
             }
 
             function setupNetworkListeners() {
                 window.addEventListener('online', () => {
+                    isOnline = true;
                     CloudSync.showSyncStatus('🌐 Соединение восстановлено');
                     if (currentUser) syncFilmsToCloud();
                 });
 
                 window.addEventListener('offline', () => {
+                    isOnline = false;
                     CloudSync.showSyncStatus('⚠️ Нет соединения');
                 });
             }
@@ -202,16 +1061,12 @@
             async function signInAnonymously() {
                 try {
                     CloudSync.showSyncStatus('🔐 Вход...');
-                    const result = await auth.signInAnonymously();
-                    console.log('Анонимный вход успешен:', result.user.uid);
+                    await auth.signInAnonymously();
                 } catch (error) {
                     console.error('Ошибка входа:', error);
                     CloudSync.showSyncStatus('❌ Ошибка входа');
-                    
-                    // Fallback: продолжаем работу без синхронизации
+                    // Продолжаем работу без синхронизации
                     elements.authContainer.classList.add('hidden');
-                    loadFromLocalStorage();
-                    renderFilmList();
                 }
             }
 
@@ -221,10 +1076,7 @@
                         currentUser = user;
                         elements.authContainer.classList.add('hidden');
                         updateUserAvatar();
-                        
-                        // Загружаем данные
                         await loadUserData();
-                        
                     } else {
                         currentUser = null;
                         elements.authContainer.classList.remove('hidden');
@@ -236,17 +1088,14 @@
 
             async function loadUserData() {
                 try {
-                    // Пробуем загрузить из облака
                     const cloudFilms = await CloudSync.loadFilmsFromCloud(currentUser.uid);
                     
                     if (cloudFilms.length > 0) {
                         films = cloudFilms;
                         CloudSync.showSyncStatus('☁️ Данные загружены из облака');
                     } else {
-                        // Загружаем локальные данные
                         loadFromLocalStorage();
                         if (films.length > 0) {
-                            // Синхронизируем локальные данные в облако
                             await CloudSync.saveFilmsToCloud(films, currentUser.uid);
                         }
                     }
@@ -269,7 +1118,6 @@
                     films = cloudFilms;
                     saveToLocalStorage();
                     renderFilmList();
-                    CloudSync.showSyncStatus('🔄 Данные обновлены');
                 });
             }
 
@@ -290,27 +1138,33 @@
             }
 
             async function syncFilmsToCloud() {
-                if (currentUser) {
+                if (currentUser && isOnline) {
                     await CloudSync.saveFilmsToCloud(films, currentUser.uid);
                 }
             }
 
             function saveToLocalStorage() {
                 localStorage.setItem('filmRatings', JSON.stringify(films));
-                if (currentUser) syncFilmsToCloud();
+                syncFilmsToCloud();
             }
 
-            // Модифицируем функции изменения данных
-            function saveFilmRating() {
-                // ... (код сохранения оценки) ...
-                saveToLocalStorage();
+            function loadFromLocalStorage() {
+                const saved = localStorage.getItem('filmRatings');
+                if (saved) films = JSON.parse(saved);
+                
+                const theme = localStorage.getItem('theme');
+                if (theme) document.documentElement.setAttribute('data-theme', theme);
             }
 
-            function deleteFilm(filmId) {
-                // ... (код удаления) ...
-                saveToLocalStorage();
+            function toggleTheme() {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'light';
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
             }
 
+            // ... (остальные функции поиска, оценки, удаления фильмов остаются без изменений) ...
+
+            // Возвращаем публичные методы
             return {
                 init,
                 deleteFilmFromModal: (filmId) => {
@@ -328,9 +1182,7 @@
             };
         })();
 
-        // Глобальные функции
-        window.KinoVisionApp = KinoVisionApp;
-
+        // Инициализация приложения
         document.addEventListener('DOMContentLoaded', () => KinoVisionApp.init());
     </script>
 </body>
